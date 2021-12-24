@@ -23,3 +23,14 @@ RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/
 
 # Install poetry
 RUN pip install poetry
+
+# Install Cloud SDK
+ARG CLOUDSDK_VERSION="367.0.0"
+
+# For now, Google Cloud SDK doesn't work with Python 3.10.
+ENV CLOUDSDK_PYTHON=/usr/bin/python3.9
+RUN curl -o /tmp/google-cloud-sdk.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${CLOUDSDK_VERSION}-linux-x86_64.tar.gz \
+    && su vscode -c "mkdir -p \$HOME/opt" \
+    && su vscode -c "tar xf /tmp/google-cloud-sdk.tar.gz -C \$HOME/opt" \
+    && su vscode -c "\$HOME/opt/google-cloud-sdk/install.sh --quiet" \
+    && rm -f /tmp/google-cloud-sdk.tar.gz

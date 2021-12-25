@@ -6,6 +6,7 @@ from .main import app
 
 client = TestClient(app)
 
+
 def test_index():
     """Test for GET /"""
     response = client.get("/")

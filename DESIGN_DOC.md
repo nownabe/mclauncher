@@ -16,7 +16,7 @@ And to cut cost down, shutting down the server as all the players disconnected.
 
 ### Non-goals
 
-* Managing Minecraft server such as upgrading, back ups and availability.
+* Managing Minecraft server such as upgrading, back-ups and availability.
 
 ## Background
 
@@ -70,4 +70,4 @@ To avoid that situation, authenticate users of this app with Firebase Authentica
 
 ## Caveat
 
-Firebase Authentication's project must be separated from other Google Cloud services because [Blaze plan](https://firebase.google.com/pricing) cost it but Spark doesn't.
+Firebase Authentication's project must be separated from other Google Cloud services because [Blaze plan](https://firebase.google.com/pricing) cost it, but Spark doesn't.

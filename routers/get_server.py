@@ -15,7 +15,7 @@ class GetServerResponse(BaseModel):
     players: list[str] = Field(
         description="A list of players joining the server.",
         example=["Steve", "Alex"]
-        )
+    )
 
 
 @router.get("/server", response_model=GetServerResponse)

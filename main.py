@@ -18,7 +18,10 @@ async def index(request: Request):
     """
     The index page returns index.html.
     """
-    return templates.TemplateResponse("index.html", context={"request": request})
+    return templates.TemplateResponse(
+        "index.html",
+        context={"request": request}
+    )
 
 
 app.include_router(get_server.router, prefix="/api/v1")

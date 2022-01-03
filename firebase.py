@@ -20,6 +20,6 @@ def is_authorized_user() -> Callable[[str], bool]:
 
     def _is_authorized_user(email: str):
         authorized_users_ref = firestore_client.collection('authorized_users')
-        return any(user.data['email'] == email for user in authorized_users_ref)
+        return any(user.get('email') == email for user in authorized_users_ref.stream())
 
     return _is_authorized_user

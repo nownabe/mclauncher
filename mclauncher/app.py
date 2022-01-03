@@ -50,11 +50,20 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
                 )
 
 
-def create_app(verify_id_token: Callable, is_authorized_user: Callable[[str], bool]):
+def create_app(
+        verify_id_token: Callable,
+        is_authorized_user: Callable[[str], bool],
+):
     app = FastAPI()
-    templates = Jinja2Templates(directory=path.join(path.dirname(__file__), 'templates'))
+    templates = Jinja2Templates(
+        directory=path.join(path.dirname(__file__), 'templates')
+    )
 
-    _authorize(app=v1, verify_id_token=verify_id_token, is_authorized_user=is_authorized_user)
+    _authorize(
+        app=v1,
+        verify_id_token=verify_id_token,
+        is_authorized_user=is_authorized_user
+    )
     app.mount("/api/v1", v1)
 
     @app.get("/", response_class=HTMLResponse)

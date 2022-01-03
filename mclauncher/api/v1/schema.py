@@ -1,12 +1,7 @@
-"""
-Define get_server to handle GET /api/v1/server.
-"""
+"""API schemas"""
 
-from fastapi import APIRouter
 from pydantic import BaseModel
 from pydantic.fields import Field
-
-router = APIRouter()
 
 
 class GetServerResponse(BaseModel):
@@ -18,9 +13,6 @@ class GetServerResponse(BaseModel):
     )
 
 
-@router.get("/server", response_model=GetServerResponse)
-async def get_server():
-    """
-    Returns the server status.
-    """
-    return GetServerResponse(False, [])
+class StartServerResponse(BaseModel):
+    """Response for /api/v1/server/start."""
+    ok: bool

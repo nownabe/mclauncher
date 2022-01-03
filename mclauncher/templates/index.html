@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>mclauncher</title>
+
+    <meta name="viewpoint" content="width=device-width, initial-scale=1" />
+
+    <style>
+      #loading {
+      }
+
+      #sign-in {
+        display: none;
+      }
+
+      #not-allowed {
+        display: none;
+      }
+
+      #server-status {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hello, mclauncher!</h1>
+
+    <div id="loading">loading</div>
+
+    <div id="sign-in">Sign in</div>
+
+    <div id="not-allowed">Your access is not allowed.</div>
+
+    <div id="server-status">Server status</div>
+
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics.js";
+      import {
+        GoogleAuthProvider,
+        browserSessionPersistence,
+        getAuth,
+        getRedirectResult,
+        setPersistence,
+        signInWithRedirect,
+      } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
+
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      const firebaseConfig = {
+        apiKey: "AIzaSyBEjedGmJYY3aetyY6UrB4d92fN5XjmrXo",
+        authDomain: "mclauncher-spark.firebaseapp.com",
+        projectId: "mclauncher-spark",
+        storageBucket: "mclauncher-spark.appspot.com",
+        messagingSenderId: "1032541656466",
+        appId: "1:1032541656466:web:12d1d84dbe8a4e7f739d4b",
+        measurementId: "G-PR20LWY6DG",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+
+      const auth = getAuth();
+
+      (async () => {
+        let user = auth.currentUser;
+
+        try {
+          const result = await getRedirectResult(auth);
+          user = result.user;
+        } catch (error) {
+          console.error(
+            `Error(getRedirectResult): ${error.code}: ${error.message}`
+          );
+        }
+
+        if (!user) {
+          try {
+            await setPersistence(auth, browserSessionPersistence);
+            const provider = new GoogleAuthProvider();
+            return signInWithRedirect(auth, provider);
+          } catch (error) {
+            console.error(
+              `Error(setPersistence): ${error.code}: ${error.message}`
+            );
+          }
+        }
+
+        const api = async (method, path) => {
+          const response = await fetch(`/api/v1${path}`, {
+            method,
+            headers: {
+              Authorization: `Bearer ${user.accessToken}`,
+            },
+          });
+          return await response.json();
+        };
+
+        const serverStatus = await api("GET", "/server");
+        console.log(serverStatus);
+      })();
+    </script>
+  </body>
+</html>

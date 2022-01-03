@@ -2,14 +2,13 @@
 RESTful API and index.html for mclauncher.
 """
 
-from fastapi import FastAPI
+from firebase_admin import auth
 
-app = FastAPI()
+from mclauncher.app import create_app
+from firebase import initialize_firebase, is_authorized_user
 
-
-@app.get("/")
-def index():
-    """
-    The index page returns index.html.
-    """
-    return {"message": "hello world"}
+initialize_firebase()
+app = create_app(
+    verify_id_token=auth.verify_id_token,
+    is_authorized_user=is_authorized_user()
+)

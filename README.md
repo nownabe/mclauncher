@@ -8,6 +8,19 @@ Install dependencies with [poetry](https://python-poetry.org/).
 poetry install
 ```
 
+Run Firestore emulator.
+
+```bash
+firestore emulators:start
+```
+
+Set environment variables.
+
+```bash
+export FIREBASE_CREDENTIALS_JSON="$(cat firebase.credentials.json)"
+export FIRESTORE_EMULATOR_HOST="localhost:8080"
+```
+
 Run the development server.
 
 ```bash

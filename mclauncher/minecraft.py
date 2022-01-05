@@ -13,17 +13,12 @@ class TooLongVarInt(Exception):
     pass
 
 
-class AbstractMinecraftConnection(metaclass=ABCMeta):
+class MinecraftProtocol(metaclass=ABCMeta):
     @abstractmethod
     async def connect(self):
+        '''Connect to the server'''
         ...
 
-    @abstractmethod
-    async def read_status(self):
-        ...
-
-
-class MinecraftProtocol(metaclass=ABCMeta):
     @abstractmethod
     async def read(self, length: int) -> bytes:
         '''Read bytes'''
@@ -84,6 +79,9 @@ class MinecraftProtocolBuffer(MinecraftProtocol):
         self.__read_buffer = bytearray(data)
         self.__write_buffer = bytearray()
 
+    async def connect(self):
+        pass
+
     async def read(self, length: int) -> bytes:
         data = bytes(self.__read_buffer[:length])
         self.__read_buffer = self.__read_buffer[length:]
@@ -99,8 +97,11 @@ class MinecraftProtocolBuffer(MinecraftProtocol):
         self.__write_buffer = bytearray()
         return data
 
+    def __len__(self) -> int:
+        return len(self.__write_buffer)
 
-class MinecraftConnection(AbstractMinecraftConnection, MinecraftProtocol):
+
+class MinecraftConnection(MinecraftProtocol):
     '''
     TCP Connection to Minecraft server
 
@@ -133,19 +134,6 @@ class MinecraftConnection(AbstractMinecraftConnection, MinecraftProtocol):
         await self.__handshake()
         self.__connected = True
 
-    async def read_status(self) -> dict:
-        buffer = MinecraftProtocolBuffer()
-        buffer.write_varint(0)
-        self.__write_buffer(buffer)
-
-        length = await self.read_varint()
-        result = MinecraftProtocolBuffer(await self.read(length))
-
-        if await result.read_varint() != 0:
-            raise IOError("invalid response")
-
-        return json.loads(await result.read_string())
-
     async def read(self, length: int) -> bytes:
         data = bytearray()
         while len(data) < length:
@@ -170,9 +158,6 @@ class MinecraftConnection(AbstractMinecraftConnection, MinecraftProtocol):
         buffer.write_ushort(self.__port)
         buffer.write_varint(1)
 
-        self.__write_buffer(buffer)
-
-    def __write_buffer(self, buffer: MinecraftProtocolBuffer):
         data = buffer.flush()
         self.write_varint(len(data))
         self.write(data)
@@ -187,9 +172,11 @@ class MinecraftConnection(AbstractMinecraftConnection, MinecraftProtocol):
 class MinecraftStatus:
     '''Minecraft server status'''
 
+    PACKET_ID_STATUS = 0x00
+
     __status: dict = None
 
-    def __init__(self, connection: AbstractMinecraftConnection):
+    def __init__(self, connection: MinecraftProtocol):
         self.__connection = connection
 
     async def read_status(self):
@@ -197,7 +184,19 @@ class MinecraftStatus:
             return
 
         await self.__connection.connect()
-        self.__status = await self.__connection.read_status()
+
+        buffer = MinecraftProtocolBuffer()
+        buffer.write_varint(0)
+        self.__write_buffer(buffer)
+
+        length = await self.__connection.read_varint()
+        raw_content = await self.__connection.read(length)
+        result = MinecraftProtocolBuffer(raw_content)
+
+        if await result.read_varint() != self.PACKET_ID_STATUS:
+            raise IOError("invalid response")
+
+        self.__status = json.loads(await result.read_string())
 
     def description(self) -> str:
         return self.__status['description']['text']
@@ -212,3 +211,8 @@ class MinecraftStatus:
 
     def version(self) -> str:
         return self.__status['version']['name']
+
+    def __write_buffer(self, buffer: MinecraftProtocolBuffer):
+        data = buffer.flush()
+        self.__connection.write_varint(len(data))
+        self.__connection.write(data)

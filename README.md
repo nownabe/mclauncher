@@ -19,6 +19,13 @@ Set environment variables.
 ```bash
 export FIREBASE_CREDENTIALS_JSON="$(cat firebase.credentials.json)"
 export FIRESTORE_EMULATOR_HOST="localhost:8080"
+export MINECRAFT_ADDRESS="203.0.113.1"
+```
+
+If you haven't added your email as an authorized user, run `tools/add_authorized_users.py`.
+
+```bash
+poetry run python tools/add_authorized_users.py you@example.com
 ```
 
 Run the development server.

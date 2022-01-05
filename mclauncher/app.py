@@ -8,7 +8,9 @@ from firebase_admin.auth import InvalidIdTokenError, CertificateFetchError, Expi
 from starlette.templating import Jinja2Templates
 from starlette.responses import JSONResponse, HTMLResponse
 
-from .api.v1 import app as v1
+from mclauncher.minecraft import MinecraftProtocol
+
+from .api.v1 import create_app as create_v1
 
 _AUTH_SCHEME = "Bearer"
 
@@ -53,11 +55,14 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
 def create_app(
         verify_id_token: Callable,
         is_authorized_user: Callable[[str], bool],
+        minecraft_connector: Callable[[], MinecraftProtocol],
 ):
     app = FastAPI()
     templates = Jinja2Templates(
         directory=path.join(path.dirname(__file__), 'templates')
     )
+
+    v1 = create_v1(minecraft_connector=minecraft_connector)
 
     _authorize(
         app=v1,

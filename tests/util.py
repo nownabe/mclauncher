@@ -3,7 +3,10 @@ from typing import Callable
 
 from mclauncher.minecraft import MinecraftProtocolBuffer, MinecraftStatus, MinecraftProtocol
 
-def minecraft_connector(status: dict) -> Callable[[], MinecraftProtocol]:
+def minecraft_connector(
+    status: dict,
+    protocol_class: type[MinecraftProtocolBuffer] = MinecraftProtocolBuffer,
+) -> Callable[[], MinecraftProtocol]:
     def _minecraft_connector() -> MinecraftProtocol:
         content_buffer = MinecraftProtocolBuffer()
         content_buffer.write_varint(0)
@@ -12,6 +15,6 @@ def minecraft_connector(status: dict) -> Callable[[], MinecraftProtocol]:
         response_buffer.write_varint(len(content_buffer))
         response_buffer.write(content_buffer.flush())
 
-        return MinecraftProtocolBuffer(response_buffer.flush())
+        return protocol_class(response_buffer.flush())
 
     return _minecraft_connector

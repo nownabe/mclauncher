@@ -11,7 +11,7 @@ poetry install
 Run Firestore emulator.
 
 ```bash
-firestore emulators:start
+firebase emulators:start
 ```
 
 Set environment variables.

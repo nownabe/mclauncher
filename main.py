@@ -10,6 +10,7 @@ from firebase import initialize_firebase, is_authorized_user
 from mclauncher.app import create_app
 from mclauncher.minecraft import MinecraftConnection
 
+
 def minecraft_connector():
     addr = environ['MINECRAFT_ADDRESS']
     return MinecraftConnection(addr)

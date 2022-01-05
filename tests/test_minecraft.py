@@ -1,9 +1,9 @@
-import json
 import pytest
 
-from mclauncher.minecraft import MinecraftProtocolBuffer, MinecraftStatus
+from mclauncher.minecraft import MinecraftStatus
 
 from .util import minecraft_connector
+
 
 @pytest.mark.anyio
 async def test_read_status():

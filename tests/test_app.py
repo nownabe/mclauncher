@@ -53,7 +53,8 @@ def test_get_api_v1_server_authorized():
         headers={'Authorization': 'Bearer authorized'}
     )
     assert response.status_code == 200
-    assert response.json() == {'running': True, 'players': ['Player 1', 'Player 2']}
+    assert response.json() == {'running': True, 'players': [
+        'Player 1', 'Player 2']}
 
 
 def test_get_api_v1_server_unauthorized():
@@ -73,7 +74,8 @@ def test_post_api_v1_server_not_running():
     app = create_app(
         verify_id_token=verify_id_token,
         is_authorized_user=is_authorized_user,
-        minecraft_connector=minecraft_connector(status, protocol_class=NotRunningConnection),
+        minecraft_connector=minecraft_connector(
+            status, protocol_class=NotRunningConnection),
     )
     client = TestClient(app)
     response = client.get(
@@ -100,4 +102,3 @@ def test_post_api_v1_server_start_unauthorized():
     )
     assert response.status_code == 403
     assert response.json() == {'error': 'forbidden'}
-

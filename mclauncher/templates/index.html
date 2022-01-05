@@ -57,8 +57,9 @@
           </span>
         </p>
         <div class="has-text-centered mt-4">
-          <h3 class="is-size-3 has-text-grey">Players <span id="number-of-players"></span>
-        </h3>
+          <h3 class="is-size-3 has-text-grey">
+            Players <span id="number-of-players"></span>
+          </h3>
           <ul class="is-size-2" id="players"></ul>
         </div>
       </div>
@@ -153,7 +154,9 @@
             players.append(playerElem);
           });
 
-          document.getElementById("number-of-players").innerHTML = `(${response.players.length})`;
+          document.getElementById(
+            "number-of-players"
+          ).innerHTML = `(${response.players.length})`;
 
           document.getElementById("server").style.display = "block";
         } else {

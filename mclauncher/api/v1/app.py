@@ -11,7 +11,6 @@ from . import schema
 def create_app(minecraft_connector: Callable[[], MinecraftProtocol]) -> FastAPI:
     app = FastAPI(root_path="/api/v1")
 
-
     @app.get("/server", response_model=schema.GetServerResponse)
     async def get_server():
         """
@@ -29,7 +28,6 @@ def create_app(minecraft_connector: Callable[[], MinecraftProtocol]) -> FastAPI:
             pass
 
         return response
-
 
     @app.post("/server/start", response_model=schema.StartServerResponse)
     def start_server():

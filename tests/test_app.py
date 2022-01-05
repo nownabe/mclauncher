@@ -47,17 +47,17 @@ def test_get_api_v1_server_unauthorized():
 
 
 def test_post_api_v1_server_start_authorized():
-    response = client.get(
-        '/api/v1/server',
+    response = client.post(
+        '/api/v1/server/start',
         headers={'Authorization': 'Bearer authorized'}
     )
     assert response.status_code == 200
-    assert response.json() == {'running': False, 'players': []}
+    assert response.json() == {'ok': False}
 
 
 def test_post_api_v1_server_start_unauthorized():
-    response = client.get(
-        '/api/v1/server',
+    response = client.post(
+        '/api/v1/server/start',
         headers={'Authorization': 'Bearer unauthorized'}
     )
     assert response.status_code == 403

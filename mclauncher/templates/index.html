@@ -6,33 +6,63 @@
 
     <meta name="viewpoint" content="width=device-width, initial-scale=1" />
 
-    <style>
-      #loading {
-      }
-
-      #sign-in {
-        display: none;
-      }
-
-      #not-allowed {
-        display: none;
-      }
-
-      #server-status {
-        display: none;
-      }
-    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
   </head>
   <body>
-    <h1>Hello, mclauncher!</h1>
+    <div class="container mt-6">
+      <h1 class="title is-1 has-text-centered">TODO: change here</h1>
 
-    <div id="loading">loading</div>
+      <div id="loading">
+        <p class="subtitle is-3 has-text-centered">Loading...</p>
+        <progress class="progress"></progress>
+      </div>
 
-    <div id="sign-in">Sign in</div>
+      <div id="error" style="display: none">
+        <p class="subtitle is-3 has-text-centered has-text-danger">Error</p>
+        <p></p>
+      </div>
 
-    <div id="not-allowed">Your access is not allowed.</div>
-
-    <div id="server-status">Server status</div>
+      <div id="server" class="mt-6" style="display: none">
+        <p
+          id="server-running"
+          class="has-text-centered has-text-success is-size-2"
+          style="display: none"
+        >
+          <span class="icon-text">
+            <span class="icon">
+              <i class="fa fa-check-circle"></i>
+            </span>
+            &nbsp;
+            <span>Server is running</span>
+          </span>
+        </p>
+        <p
+          id="server-stopped"
+          class="has-text-centered has-text-warning is-size-2"
+          style="display: none"
+        >
+          <span class="icon-text">
+            <span class="icon">
+              <i class="fa fa-check-circle"></i>
+            </span>
+            &nbsp;
+            <span>Server is not running</span>
+          </span>
+        </p>
+        <div class="has-text-centered mt-4">
+          <h3 class="is-size-3 has-text-grey">Players <span id="number-of-players"></span>
+        </h3>
+          <ul class="is-size-2" id="players"></ul>
+        </div>
+      </div>
+    </div>
 
     <script type="module">
       // Import the functions you need from the SDKs you need
@@ -99,11 +129,41 @@
               Authorization: `Bearer ${user.accessToken}`,
             },
           });
-          return await response.json();
+          return response;
         };
 
-        const serverStatus = await api("GET", "/server");
-        console.log(serverStatus);
+        const serverStatusResponse = await api("GET", "/server");
+        const response = await serverStatusResponse.json();
+        console.log(response); // TODO: Remove
+
+        if (serverStatusResponse.ok) {
+          document.getElementById("loading").style.display = "none";
+
+          if (response.running) {
+            document.getElementById("server-running").style.display = "block";
+          } else {
+            document.getElementById("server-stopped").style.display = "block";
+          }
+
+          const players = document.getElementById("players");
+
+          response.players.forEach((player) => {
+            const playerElem = document.createElement("li");
+            playerElem.innerText = player;
+            players.append(playerElem);
+          });
+
+          document.getElementById("number-of-players").innerHTML = `(${response.players.length})`;
+
+          document.getElementById("server").style.display = "block";
+        } else {
+          const error = response.error || "Sorry, something went wrong.";
+          console.error(`Error(GET /api/v1/server): ${error}`);
+          alert(error);
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("error").style.display = "block";
+          return;
+        }
       })();
     </script>
   </body>

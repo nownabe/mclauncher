@@ -1,7 +1,8 @@
 import json
 from typing import Callable
 
-from mclauncher.minecraft import MinecraftProtocolBuffer, MinecraftStatus, MinecraftProtocol
+from mclauncher.minecraft import MinecraftProtocolBuffer, MinecraftProtocol
+
 
 def minecraft_connector(
     status: dict,

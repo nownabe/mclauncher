@@ -35,4 +35,5 @@ RUN curl -o /tmp/google-cloud-sdk.tar.gz https://dl.google.com/dl/cloudsdk/chann
     && su vscode -c "\$HOME/opt/google-cloud-sdk/install.sh --quiet" \
     && rm -f /tmp/google-cloud-sdk.tar.gz
 
-RUN npm install -g firebase-tools
+RUN su vscode -c "npm install -g firebase-tools" \
+    && su vscode -c "firebase setup:emulators:firestore"

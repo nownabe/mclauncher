@@ -25,26 +25,33 @@ def create_app(
         """
         Returns the server status.
         """
+
         response = schema.GetServerResponse(running=False, players=[])
 
         try:
             instance = get_instance()
         except Exception as error:
-            logger.error(f'Error(get_instance): {type(error)=}: {error=}')
+            logger.error('get_instance(): %r', error)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(error)
             ) from error
 
-        if instance.is_running:
-            try:
-                connection = connect_minecraft(instance.address)
-                mc_status = MinecraftStatus(connection)
-                await mc_status.read_status()
-                response.running = True
-                response.players = mc_status.players()
-            except Exception as error:
-                logger.warn(f'Error(minecraft): {type(error)=}: {error=}')
+        if not instance.is_running:
+            return response
+
+        try:
+            connection = connect_minecraft(instance.address)
+            mc_status = MinecraftStatus(connection)
+            await mc_status.read_status()
+            response.running = True
+            response.players = mc_status.players()
+        except Exception as error:
+            logger.error('getting minecraft status: %r', error)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(error)
+            ) from error
 
         return response
 

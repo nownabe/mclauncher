@@ -134,10 +134,9 @@
         };
 
         const serverStatusResponse = await api("GET", "/server");
-        const response = await serverStatusResponse.json();
-        console.log(response); // TODO: Remove
 
         if (serverStatusResponse.ok) {
+          const response = await serverStatusResponse.json();
           document.getElementById("loading").style.display = "none";
 
           if (response.running) {
@@ -160,7 +159,13 @@
 
           document.getElementById("server").style.display = "block";
         } else {
-          const error = response.error || "Sorry, something went wrong.";
+          let error = "Sorry, something went wrong.";
+          try {
+            const response = await serverStatusResponse.json();
+            error = response.error;
+          } catch (e) {
+            console.error(e);
+          }
           console.error(`Error(GET /api/v1/server): ${error}`);
           alert(error);
           document.getElementById("loading").style.display = "none";

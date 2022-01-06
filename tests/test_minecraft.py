@@ -2,7 +2,7 @@ import pytest
 
 from mclauncher.minecraft import MinecraftStatus
 
-from .util import minecraft_connector
+from .util import connect_minecraft
 
 
 @pytest.mark.anyio
@@ -22,7 +22,7 @@ async def test_read_status():
         }
     }
 
-    mock = minecraft_connector(status)()
+    mock = connect_minecraft(status)("dummy")
 
     status = MinecraftStatus(mock)
     await status.read_status()

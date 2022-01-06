@@ -1,14 +1,23 @@
 """Sub app for api"""
 
+from logging import getLogger
+
 from typing import Callable
 from fastapi import FastAPI
+from mclauncher.instance import Instance
 
 from mclauncher.minecraft import MinecraftProtocol, MinecraftStatus
 
 from . import schema
 
 
-def create_app(minecraft_connector: Callable[[], MinecraftProtocol]) -> FastAPI:
+logger = getLogger('uvicorn')
+
+
+def create_app(
+    connect_minecraft: Callable[[str], MinecraftProtocol],
+    get_instance: Callable[[], Instance],
+) -> FastAPI:
     app = FastAPI(root_path="/api/v1")
 
     @app.get("/server", response_model=schema.GetServerResponse)
@@ -19,13 +28,20 @@ def create_app(minecraft_connector: Callable[[], MinecraftProtocol]) -> FastAPI:
         response = schema.GetServerResponse(running=False, players=[])
 
         try:
-            connection = minecraft_connector()
-            status = MinecraftStatus(connection)
-            await status.read_status()
-            response.running = True
-            response.players = status.players()
-        except TimeoutError:
-            pass
+            instance = get_instance()
+        except Exception as error:
+            logger.error(f'Error(get_instance): {type(error)=}: {error=}')
+            return {"error": str(error)}
+
+        if instance.is_running:
+            try:
+                connection = connect_minecraft(instance.address)
+                status = MinecraftStatus(connection)
+                await status.read_status()
+                response.running = True
+                response.players = status.players()
+            except Exception as error:
+                logger.warn(f'Error(minecraft): {type(error)=}: {error=}')
 
         return response
 

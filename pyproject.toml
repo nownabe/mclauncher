@@ -12,6 +12,7 @@ uvicorn = {extras = ["standard"], version = "^0.16.0"}
 Jinja2 = "^3.0.3"
 pydantic = "^1.8.2"
 firebase-admin = "^5.2.0"
+google-api-python-client = "^2.33.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"

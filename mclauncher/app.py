@@ -8,7 +8,7 @@ from fastapi.exceptions import HTTPException
 from firebase_admin.auth import InvalidIdTokenError, CertificateFetchError, ExpiredIdTokenError, RevokedIdTokenError, UserDisabledError
 from starlette import status
 from starlette.templating import Jinja2Templates
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, JSONResponse
 from mclauncher.instance import Instance
 
 from mclauncher.minecraft import MinecraftProtocol
@@ -22,36 +22,41 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
     """Create a middleware to authorize requests."""
     @app.middleware("http")
     async def _authorize(request: Request, call_next):
-        id_token = request.headers["Authorization"][len(_AUTH_SCHEME)+1:]
         try:
+            id_token = request.headers["Authorization"][len(_AUTH_SCHEME)+1:]
             token = verify_id_token(id_token)
-        except (ValueError, InvalidIdTokenError) as error:
-            raise HTTPException(
+        except (KeyError,) as error:
+            return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f'invalid token: {error}',
-            ) from error
+                content={'detail': f'invalid header: {error}'}
+            )
         except (ExpiredIdTokenError, RevokedIdTokenError) as error:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f'invalid token: {error}',
-            ) from error
+                content={'detail': f'invalid token: {error}'},
+            )
+        except (ValueError, InvalidIdTokenError) as error:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={'detail': f'invalid token: {error}'}
+            )
         except (UserDisabledError,) as error:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f'invalid user: {error}',
-            ) from error
+                content={'detail': f'invalid user: {error}'},
+            )
         except (CertificateFetchError,) as error:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f'internal server error: {error}',
-            ) from error
+                content={'detail': f'internal server error: {error}'},
+            )
         else:
             if is_authorized_user(token['email']):
                 return await call_next(request)
             else:
-                raise HTTPException(
+                return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f'forbidden',
+                    content={'detail': f'forbidden'},
                 )
 
 

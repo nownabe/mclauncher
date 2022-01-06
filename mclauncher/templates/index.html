@@ -19,11 +19,6 @@
     <div class="container mt-6">
       <h1 class="title is-1 has-text-centered">TODO: change here</h1>
 
-      <div id="loading">
-        <p class="subtitle is-3 has-text-centered">Loading...</p>
-        <progress class="progress"></progress>
-      </div>
-
       <div id="error" style="display: none">
         <p class="subtitle is-3 has-text-centered has-text-danger">Error</p>
         <p></p>
@@ -62,6 +57,11 @@
           </h3>
           <ul class="is-size-2" id="players"></ul>
         </div>
+      </div>
+
+      <div id="loading">
+        <p class="subtitle is-3 has-text-centered">Loading...</p>
+        <progress class="progress is-info"></progress>
       </div>
     </div>
 
@@ -124,54 +124,65 @@
         }
 
         const api = async (method, path) => {
+          document.getElementById("loading").style.display = "block";
           const response = await fetch(`/api/v1${path}`, {
             method,
             headers: {
               Authorization: `Bearer ${user.accessToken}`,
             },
           });
+          document.getElementById("loading").style.display = "none";
           return response;
         };
 
-        const serverStatusResponse = await api("GET", "/server");
-
-        if (serverStatusResponse.ok) {
-          const response = await serverStatusResponse.json();
-          document.getElementById("loading").style.display = "none";
-
-          if (response.running) {
-            document.getElementById("server-running").style.display = "block";
-          } else {
-            document.getElementById("server-stopped").style.display = "block";
-          }
-
-          const players = document.getElementById("players");
-
-          response.players.forEach((player) => {
-            const playerElem = document.createElement("li");
-            playerElem.innerText = player;
-            players.append(playerElem);
-          });
-
-          document.getElementById(
-            "number-of-players"
-          ).innerHTML = `(${response.players.length})`;
-
-          document.getElementById("server").style.display = "block";
-        } else {
+        const handleErrorResponse = async (name, response) => {
           let detail = "Sorry, something went wrong.";
           try {
-            const response = await serverStatusResponse.json();
-            detail = response.detail;
+            detail = (await response.json()).detail;
           } catch (e) {
             console.error(e);
           }
-          console.error(`Error(GET /api/v1/server): ${detail}`);
-          alert(detail);
+          const msg = `Failed api request (${name}): ${detail}`;
+          console.error(msg);
+          alert(msg);
           document.getElementById("loading").style.display = "none";
+          document.getElementById("server").style.display = "none";
           document.getElementById("error").style.display = "block";
-          return;
-        }
+        };
+
+        const getServerStatus = async () => {
+          const response = await api("GET", "/server");
+
+          if (response.ok) {
+            const body = await response.json();
+
+            if (body.running) {
+              document.getElementById("server-running").style.display = "block";
+            } else {
+              document.getElementById("server-stopped").style.display = "block";
+            }
+
+            const players = document.getElementById("players");
+
+            body.players.forEach((player) => {
+              const playerElem = document.createElement("li");
+              playerElem.innerText = player;
+              players.append(playerElem);
+            });
+
+            document.getElementById(
+              "number-of-players"
+            ).innerHTML = `(${body.players.length})`;
+
+            document.getElementById("server").style.display = "block";
+            return !body.running;
+          } else {
+            await handleErrorResponse("GET /api/v1/server", response);
+            return false;
+          }
+        };
+
+        await getServerStatus();
       })();
     </script>
   </body>

@@ -60,6 +60,7 @@ def create_app(
         is_authorized_user: Callable[[str], bool],
         connect_minecraft: Callable[[str], MinecraftProtocol],
         get_instance: Callable[[], Instance],
+        start_instance: Callable[[], None],
 ):
     app = FastAPI()
     templates = Jinja2Templates(
@@ -69,6 +70,7 @@ def create_app(
     v1 = create_v1(
         connect_minecraft=connect_minecraft,
         get_instance=get_instance,
+        start_instance=start_instance,
     )
 
     _authorize(

@@ -17,8 +17,19 @@ logger = getLogger('uvicorn')
 def create_app(
     connect_minecraft: Callable[[str], MinecraftProtocol],
     get_instance: Callable[[], Instance],
+    start_instance: Callable[[], None],
 ) -> FastAPI:
     app = FastAPI(root_path="/api/v1")
+
+    def _get_instance():
+        try:
+            return get_instance()
+        except Exception as error:
+            logger.error('get_instance(): %r', error)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(error)
+            ) from error
 
     @app.get("/server", response_model=schema.GetServerResponse)
     async def get_server():
@@ -28,14 +39,7 @@ def create_app(
 
         response = schema.GetServerResponse(running=False, players=[])
 
-        try:
-            instance = get_instance()
-        except Exception as error:
-            logger.error('get_instance(): %r', error)
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=str(error)
-            ) from error
+        instance = _get_instance()
 
         if not instance.is_running:
             return response
@@ -60,6 +64,20 @@ def create_app(
         """
         Start the server.
         """
-        return {"ok": False}
+
+        instance = _get_instance()
+
+        if instance.is_running:
+            return schema.StartServerResponse(ok=False)
+
+        try:
+            start_instance()
+            return schema.StartServerResponse(ok=True)
+        except Exception as error:
+            logger.error('start_instance(): %r', error)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(error),
+            ) from error
 
     return app

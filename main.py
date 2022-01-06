@@ -7,7 +7,7 @@ from firebase_admin import auth
 from firebase import initialize_firebase, is_authorized_user
 from mclauncher.app import create_app
 from mclauncher.minecraft import MinecraftConnection, MinecraftProtocol
-from mclauncher.compute_engine import get_instance
+from mclauncher.compute_engine import get_instance, start_instance
 
 
 def connect_minecraft(address: str) -> MinecraftProtocol:
@@ -20,4 +20,5 @@ app = create_app(
     is_authorized_user=is_authorized_user(),
     connect_minecraft=connect_minecraft,
     get_instance=get_instance,
+    start_instance=start_instance,
 )

@@ -11,7 +11,6 @@ And to cut cost down, shutting down the server as all the players disconnected.
 
 * Allowlisted players can launch the server anytime via a web interface.
 * Shut the server down automatically when all the players left.
-* Notify players of the events and the IP address of the server.
 * Low infrastructure cost. Zero cost is the best if possible.
 
 ### Non-goals
@@ -33,7 +32,7 @@ To reduce infrastructure cost and to reduce operational cost, I prefer serverles
 
 * Cloud Run - to host the SPA and the API as a service.
 * Cloud Scheduler - to check how many players are connecting regularly.
-* Cloud Firestore - to store the server list and the allowlist of players.
+* Cloud Firestore - to store the allowlist of players.
 * Firebase Authentication - to authenticate players.
 
 ## Detailed designs
@@ -59,8 +58,8 @@ It should be configured with environment variables.
 
 ### Web frontend
 
-Just plain React app with TypeScript.
-It should be distributed as static files of the App.
+Plain HTML and JavaScript.
+It is distributed as static files of the App.
 
 ## Security and privacy
 

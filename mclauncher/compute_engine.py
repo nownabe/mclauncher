@@ -1,6 +1,5 @@
 import time
 from os import environ
-from pprint import pprint
 
 import googleapiclient.discovery
 import google.auth

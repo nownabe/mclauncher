@@ -4,7 +4,6 @@ from os import path
 from typing import Callable
 
 from fastapi import FastAPI, Request
-from fastapi.exceptions import HTTPException
 from firebase_admin.auth import InvalidIdTokenError, CertificateFetchError, ExpiredIdTokenError, RevokedIdTokenError, UserDisabledError
 from starlette import status
 from starlette.templating import Jinja2Templates
@@ -56,7 +55,7 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
             else:
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    content={'detail': f'forbidden'},
+                    content={'detail': 'forbidden'},
                 )
 
 

@@ -60,6 +60,7 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
 
 
 def create_app(
+        title: str,
         verify_id_token: Callable,
         is_authorized_user: Callable[[str], bool],
         connect_minecraft: Callable[[str], MinecraftProtocol],
@@ -68,7 +69,7 @@ def create_app(
 ):
     app = FastAPI()
     templates = Jinja2Templates(
-        directory=path.join(path.dirname(__file__), 'templates')
+        directory=path.join(path.dirname(__file__), 'templates'),
     )
 
     v1 = create_v1(
@@ -91,7 +92,7 @@ def create_app(
         """
         return templates.TemplateResponse(
             "index.html",
-            context={"request": request}
+            context={"request": request, "title": title}
         )
 
     return app

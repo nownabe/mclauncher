@@ -19,7 +19,9 @@ Set environment variables.
 ```bash
 export FIREBASE_CREDENTIALS_JSON="$(cat firebase.credentials.json)"
 export FIRESTORE_EMULATOR_HOST="localhost:8080"
-export MINECRAFT_ADDRESS="203.0.113.1"
+export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/gcpproject.credentials.json"
+export INSTANCE_ZONE="asia-northeast1-a"
+export INSTANCE_NAME="minecraft-instance"
 ```
 
 If you haven't added your email as an authorized user, run `tools/add_authorized_users.py`.

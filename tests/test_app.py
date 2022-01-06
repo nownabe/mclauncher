@@ -53,6 +53,7 @@ def create_client(
     start_instance=start_instance,
 ):
     app = create_app(
+        title="mclauncher",
         verify_id_token=verify_id_token,
         is_authorized_user=is_authorized_user,
         connect_minecraft=connect_minecraft,

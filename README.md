@@ -45,3 +45,16 @@ Test.
 ```bash
 poetry run pytest
 ```
+
+## Deploy
+
+### Configurations
+
+Environment variables:
+
+* `PORT` (required)
+* `INSTANCE_ZONE` (required)
+* `INSTANCE_NAME` (required)
+* `FIREBASE_CREDENTIALS_JSON` (required) - used for Firebase Authentication and Firestore.
+* `TITLE` (optional) - default is `mclauncher`.
+* `WEB_CONCURRENCY` (optional) - default is `4`.

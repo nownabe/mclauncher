@@ -3,7 +3,7 @@
 from logging import getLogger
 
 from typing import Callable
-from fastapi import FastAPI
+from fastapi import FastAPI, status, HTTPException
 from mclauncher.instance import Instance
 
 from mclauncher.minecraft import MinecraftProtocol, MinecraftStatus
@@ -31,15 +31,18 @@ def create_app(
             instance = get_instance()
         except Exception as error:
             logger.error(f'Error(get_instance): {type(error)=}: {error=}')
-            return {"error": str(error)}
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(error)
+            ) from error
 
         if instance.is_running:
             try:
                 connection = connect_minecraft(instance.address)
-                status = MinecraftStatus(connection)
-                await status.read_status()
+                mc_status = MinecraftStatus(connection)
+                await mc_status.read_status()
                 response.running = True
-                response.players = status.players()
+                response.players = mc_status.players()
             except Exception as error:
                 logger.warn(f'Error(minecraft): {type(error)=}: {error=}')
 

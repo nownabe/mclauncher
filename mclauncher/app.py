@@ -4,9 +4,11 @@ from os import path
 from typing import Callable
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import HTTPException
 from firebase_admin.auth import InvalidIdTokenError, CertificateFetchError, ExpiredIdTokenError, RevokedIdTokenError, UserDisabledError
+from starlette import status
 from starlette.templating import Jinja2Templates
-from starlette.responses import JSONResponse, HTMLResponse
+from starlette.responses import HTMLResponse
 from mclauncher.instance import Instance
 
 from mclauncher.minecraft import MinecraftProtocol
@@ -24,32 +26,32 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
         try:
             token = verify_id_token(id_token)
         except (ValueError, InvalidIdTokenError) as error:
-            return JSONResponse(
-                content={'error': f'invalid token: {error}'},
-                status_code=400,
-            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f'invalid token: {error}',
+            ) from error
         except (ExpiredIdTokenError, RevokedIdTokenError) as error:
-            return JSONResponse(
-                content={'error': f'invalid token: {error}'},
-                status_code=403,
-            )
-        except (UserDisabledError, ) as error:
-            return JSONResponse(
-                content={'error': f'invalid user: {error}'},
-                status_code=403,
-            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f'invalid token: {error}',
+            ) from error
+        except (UserDisabledError,) as error:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f'invalid user: {error}',
+            ) from error
         except (CertificateFetchError,) as error:
-            return JSONResponse(
-                content={'error': f'internal server error: {error}'},
-                status_code=500,
-            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f'internal server error: {error}',
+            ) from error
         else:
             if is_authorized_user(token['email']):
                 return await call_next(request)
             else:
-                return JSONResponse(
-                    content={'error': 'forbidden'},
-                    status_code=403,
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f'forbidden',
                 )
 
 

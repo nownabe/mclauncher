@@ -159,15 +159,15 @@
 
           document.getElementById("server").style.display = "block";
         } else {
-          let error = "Sorry, something went wrong.";
+          let detail = "Sorry, something went wrong.";
           try {
             const response = await serverStatusResponse.json();
-            error = response.error;
+            detail = response.detail;
           } catch (e) {
             console.error(e);
           }
-          console.error(`Error(GET /api/v1/server): ${error}`);
-          alert(error);
+          console.error(`Error(GET /api/v1/server): ${detail}`);
+          alert(detail);
           document.getElementById("loading").style.display = "none";
           document.getElementById("error").style.display = "block";
           return;

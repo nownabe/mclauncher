@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>mclauncher</title>
+    <title>{{ title }}</title>
 
     <meta name="viewpoint" content="width=device-width, initial-scale=1" />
 
@@ -17,7 +17,7 @@
   </head>
   <body>
     <div class="container mt-6">
-      <h1 class="title is-1 has-text-centered">TODO: change here</h1>
+      <h1 class="title is-1 has-text-centered">{{ title }}</h1>
 
       <div id="error" style="display: none">
         <p class="subtitle is-3 has-text-centered has-text-danger">Error</p>
@@ -45,7 +45,7 @@
         >
           <span class="icon-text">
             <span class="icon">
-              <i class="fa fa-check-circle"></i>
+              <i class="fa fa-ban"></i>
             </span>
             &nbsp;
             <span>Server is not running</span>

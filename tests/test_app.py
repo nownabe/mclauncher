@@ -1,11 +1,13 @@
 """Tests for main.py"""
 
+from typing import Callable
 from fastapi.testclient import TestClient
 
 from mclauncher.app import create_app
+from mclauncher.instance import Instance
 from mclauncher.minecraft import MinecraftProtocolBuffer
 
-from .util import minecraft_connector
+from .util import connect_minecraft
 
 
 def verify_id_token(email: str):
@@ -14,6 +16,17 @@ def verify_id_token(email: str):
 
 def is_authorized_user(email: str):
     return email == 'authorized'
+
+
+def get_instance(is_running: bool = True) -> Callable[[], Instance]:
+    def _get_instance() -> Instance:
+        return Instance(is_running=is_running, address="dummy")
+
+    return _get_instance
+
+
+def start_instance():
+    pass
 
 
 status = {
@@ -31,13 +44,25 @@ status = {
     }
 }
 
-app = create_app(
+
+def create_client(
     verify_id_token=verify_id_token,
     is_authorized_user=is_authorized_user,
-    minecraft_connector=minecraft_connector(status),
-)
+    connect_minecraft=connect_minecraft(status),
+    get_instance=get_instance(),
+    start_instance=start_instance,
+):
+    app = create_app(
+        verify_id_token=verify_id_token,
+        is_authorized_user=is_authorized_user,
+        connect_minecraft=connect_minecraft,
+        get_instance=get_instance,
+        start_instance=start_instance,
+    )
+    return TestClient(app)
 
-client = TestClient(app)
+
+client = create_client()
 
 
 def test_index():
@@ -63,27 +88,33 @@ def test_get_api_v1_server_unauthorized():
         headers={'Authorization': 'Bearer unauthorized'}
     )
     assert response.status_code == 403
-    assert response.json() == {'error': 'forbidden'}
+    assert response.json() == {'detail': 'forbidden'}
 
 
-def test_post_api_v1_server_not_running():
-    class NotRunningConnection(MinecraftProtocolBuffer):
-        async def connect(self):
-            raise TimeoutError()
-
-    app = create_app(
-        verify_id_token=verify_id_token,
-        is_authorized_user=is_authorized_user,
-        minecraft_connector=minecraft_connector(
-            status, protocol_class=NotRunningConnection),
-    )
-    client = TestClient(app)
+def test_post_api_v1_server_instance_not_running():
+    client = create_client(get_instance=get_instance(False))
     response = client.get(
         '/api/v1/server',
         headers={'Authorization': 'Bearer authorized'}
     )
     assert response.status_code == 200
     assert response.json() == {'running': False, 'players': []}
+
+
+def test_post_api_v1_server_server_not_ready():
+    class NotRunningConnection(MinecraftProtocolBuffer):
+        async def connect(self):
+            raise TimeoutError()
+
+    client = create_client(
+        connect_minecraft=connect_minecraft(
+            status, protocol_class=NotRunningConnection)
+    )
+    response = client.get(
+        '/api/v1/server',
+        headers={'Authorization': 'Bearer authorized'}
+    )
+    assert response.status_code == 500
 
 
 def test_post_api_v1_server_start_authorized():
@@ -101,4 +132,14 @@ def test_post_api_v1_server_start_unauthorized():
         headers={'Authorization': 'Bearer unauthorized'}
     )
     assert response.status_code == 403
-    assert response.json() == {'error': 'forbidden'}
+    assert response.json() == {'detail': 'forbidden'}
+
+
+def test_post_api_v1_server_start_success():
+    client = create_client(get_instance=get_instance(False))
+    response = client.post(
+        '/api/v1/server/start',
+        headers={'Authorization': 'Bearer authorized'}
+    )
+    assert response.status_code == 200
+    assert response.json() == {'ok': True}

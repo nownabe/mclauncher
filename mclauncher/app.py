@@ -4,9 +4,12 @@ from os import path
 from typing import Callable
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import HTTPException
 from firebase_admin.auth import InvalidIdTokenError, CertificateFetchError, ExpiredIdTokenError, RevokedIdTokenError, UserDisabledError
+from starlette import status
 from starlette.templating import Jinja2Templates
-from starlette.responses import JSONResponse, HTMLResponse
+from starlette.responses import HTMLResponse, JSONResponse
+from mclauncher.instance import Instance
 
 from mclauncher.minecraft import MinecraftProtocol
 
@@ -19,50 +22,61 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
     """Create a middleware to authorize requests."""
     @app.middleware("http")
     async def _authorize(request: Request, call_next):
-        id_token = request.headers["Authorization"][len(_AUTH_SCHEME)+1:]
         try:
+            id_token = request.headers["Authorization"][len(_AUTH_SCHEME)+1:]
             token = verify_id_token(id_token)
-        except (ValueError, InvalidIdTokenError) as error:
+        except (KeyError,) as error:
             return JSONResponse(
-                content={'error': f'invalid token: {error}'},
-                status_code=400,
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={'detail': f'invalid header: {error}'}
             )
         except (ExpiredIdTokenError, RevokedIdTokenError) as error:
             return JSONResponse(
-                content={'error': f'invalid token: {error}'},
-                status_code=403,
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={'detail': f'invalid token: {error}'},
             )
-        except (UserDisabledError, ) as error:
+        except (ValueError, InvalidIdTokenError) as error:
             return JSONResponse(
-                content={'error': f'invalid user: {error}'},
-                status_code=403,
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={'detail': f'invalid token: {error}'}
+            )
+        except (UserDisabledError,) as error:
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={'detail': f'invalid user: {error}'},
             )
         except (CertificateFetchError,) as error:
             return JSONResponse(
-                content={'error': f'internal server error: {error}'},
-                status_code=500,
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={'detail': f'internal server error: {error}'},
             )
         else:
             if is_authorized_user(token['email']):
                 return await call_next(request)
             else:
                 return JSONResponse(
-                    content={'error': 'forbidden'},
-                    status_code=403,
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    content={'detail': f'forbidden'},
                 )
 
 
 def create_app(
         verify_id_token: Callable,
         is_authorized_user: Callable[[str], bool],
-        minecraft_connector: Callable[[], MinecraftProtocol],
+        connect_minecraft: Callable[[str], MinecraftProtocol],
+        get_instance: Callable[[], Instance],
+        start_instance: Callable[[], None],
 ):
     app = FastAPI()
     templates = Jinja2Templates(
         directory=path.join(path.dirname(__file__), 'templates')
     )
 
-    v1 = create_v1(minecraft_connector=minecraft_connector)
+    v1 = create_v1(
+        connect_minecraft=connect_minecraft,
+        get_instance=get_instance,
+        start_instance=start_instance,
+    )
 
     _authorize(
         app=v1,

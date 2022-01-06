@@ -1,31 +1,61 @@
 """Sub app for api"""
 
+from logging import getLogger
+
 from typing import Callable
-from fastapi import FastAPI
+from fastapi import FastAPI, status, HTTPException
+from mclauncher.instance import Instance
 
 from mclauncher.minecraft import MinecraftProtocol, MinecraftStatus
 
 from . import schema
 
 
-def create_app(minecraft_connector: Callable[[], MinecraftProtocol]) -> FastAPI:
+logger = getLogger('uvicorn')
+
+
+def create_app(
+    connect_minecraft: Callable[[str], MinecraftProtocol],
+    get_instance: Callable[[], Instance],
+    start_instance: Callable[[], None],
+) -> FastAPI:
     app = FastAPI(root_path="/api/v1")
+
+    def _get_instance():
+        try:
+            return get_instance()
+        except Exception as error:
+            logger.error('get_instance(): %r', error)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(error)
+            ) from error
 
     @app.get("/server", response_model=schema.GetServerResponse)
     async def get_server():
         """
         Returns the server status.
         """
+
         response = schema.GetServerResponse(running=False, players=[])
 
+        instance = _get_instance()
+
+        if not instance.is_running:
+            return response
+
         try:
-            connection = minecraft_connector()
-            status = MinecraftStatus(connection)
-            await status.read_status()
+            connection = connect_minecraft(instance.address)
+            mc_status = MinecraftStatus(connection)
+            await mc_status.read_status()
             response.running = True
-            response.players = status.players()
-        except TimeoutError:
-            pass
+            response.players = mc_status.players()
+        except Exception as error:
+            logger.error('getting minecraft status: %r', error)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(error)
+            ) from error
 
         return response
 
@@ -34,6 +64,20 @@ def create_app(minecraft_connector: Callable[[], MinecraftProtocol]) -> FastAPI:
         """
         Start the server.
         """
-        return {"ok": False}
+
+        instance = _get_instance()
+
+        if instance.is_running:
+            return schema.StartServerResponse(ok=False)
+
+        try:
+            start_instance()
+            return schema.StartServerResponse(ok=True)
+        except Exception as error:
+            logger.error('start_instance(): %r', error)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(error),
+            ) from error
 
     return app

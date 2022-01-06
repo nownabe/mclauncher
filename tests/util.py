@@ -4,11 +4,11 @@ from typing import Callable
 from mclauncher.minecraft import MinecraftProtocolBuffer, MinecraftProtocol
 
 
-def minecraft_connector(
+def connect_minecraft(
     status: dict,
     protocol_class: type[MinecraftProtocolBuffer] = MinecraftProtocolBuffer,
-) -> Callable[[], MinecraftProtocol]:
-    def _minecraft_connector() -> MinecraftProtocol:
+) -> Callable[[str], MinecraftProtocol]:
+    def _minecraft_connector(_: str) -> MinecraftProtocol:
         content_buffer = MinecraftProtocolBuffer()
         content_buffer.write_varint(0)
         content_buffer.write_string(json.dumps(status))

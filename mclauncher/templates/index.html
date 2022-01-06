@@ -19,11 +19,6 @@
     <div class="container mt-6">
       <h1 class="title is-1 has-text-centered">TODO: change here</h1>
 
-      <div id="loading">
-        <p class="subtitle is-3 has-text-centered">Loading...</p>
-        <progress class="progress"></progress>
-      </div>
-
       <div id="error" style="display: none">
         <p class="subtitle is-3 has-text-centered has-text-danger">Error</p>
         <p></p>
@@ -56,12 +51,25 @@
             <span>Server is not running</span>
           </span>
         </p>
-        <div class="has-text-centered mt-4">
+
+        <div class="has-text-centered mt-5">
           <h3 class="is-size-3 has-text-grey">
             Players <span id="number-of-players"></span>
           </h3>
           <ul class="is-size-2" id="players"></ul>
         </div>
+
+        <div class="mt-6 has-text-centered">
+          <h3 class="is-size-3 has-text-grey">Server Administration</h3>
+          <button id="start-button" class="button is-info mt-4" disabled>
+            Start Server
+          </button>
+        </div>
+      </div>
+
+      <div id="loading" class="mt-6">
+        <p class="subtitle is-3 has-text-centered">Loading...</p>
+        <progress class="progress is-info"></progress>
       </div>
     </div>
 
@@ -133,40 +141,91 @@
           return response;
         };
 
-        const serverStatusResponse = await api("GET", "/server");
-        const response = await serverStatusResponse.json();
-        console.log(response); // TODO: Remove
-
-        if (serverStatusResponse.ok) {
-          document.getElementById("loading").style.display = "none";
-
-          if (response.running) {
-            document.getElementById("server-running").style.display = "block";
-          } else {
-            document.getElementById("server-stopped").style.display = "block";
+        const handleErrorResponse = async (name, response) => {
+          let detail = "Sorry, something went wrong.";
+          try {
+            detail = (await response.json()).detail;
+          } catch (e) {
+            console.error(e);
           }
-
-          const players = document.getElementById("players");
-
-          response.players.forEach((player) => {
-            const playerElem = document.createElement("li");
-            playerElem.innerText = player;
-            players.append(playerElem);
-          });
-
-          document.getElementById(
-            "number-of-players"
-          ).innerHTML = `(${response.players.length})`;
-
-          document.getElementById("server").style.display = "block";
-        } else {
-          const error = response.error || "Sorry, something went wrong.";
-          console.error(`Error(GET /api/v1/server): ${error}`);
-          alert(error);
+          const msg = `Failed api request (${name}): ${detail}`;
+          console.error(msg);
+          alert(msg);
           document.getElementById("loading").style.display = "none";
+          document.getElementById("server").style.display = "none";
           document.getElementById("error").style.display = "block";
+        };
+
+        const getServerStatus = async (ignoreError = false) => {
+          const response = await api("GET", "/server");
+
+          if (response.ok) {
+            const body = await response.json();
+
+            if (body.running) {
+              document.getElementById("server-running").style.display = "block";
+              document.getElementById("server-stopped").style.display = "none";
+            } else {
+              document.getElementById("server-running").style.display = "none";
+              document.getElementById("server-stopped").style.display = "block";
+            }
+
+            const players = document.getElementById("players");
+
+            body.players.forEach((player) => {
+              const playerElem = document.createElement("li");
+              playerElem.innerText = player;
+              players.append(playerElem);
+            });
+
+            document.getElementById(
+              "number-of-players"
+            ).innerHTML = `(${body.players.length})`;
+
+            document.getElementById("server").style.display = "block";
+            return body.running ? "running" : "stopped";
+          } else {
+            if (!ignoreError) {
+              await handleErrorResponse("GET /api/v1/server", response);
+            }
+            return "error";
+          }
+        };
+
+        document.getElementById("loading").style.display = "block";
+        const status = await getServerStatus();
+        document.getElementById("loading").style.display = "none";
+        if (status !== "stopped") {
+          // Server is already running or got any errors.
           return;
         }
+
+        const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        const startServer = async () => {
+          const button = document.getElementById("start-button");
+          button.disabled = true;
+          button.onclick = null;
+          document.getElementById("loading").style.display = "block";
+          const response = await api("POST", "/server/start");
+
+          if (response.ok) {
+            while (true) {
+              const status = await getServerStatus(true);
+              if (status === "running") {
+                break;
+              }
+              await sleep(5000);
+            }
+
+            document.getElementById("loading").style.display = "none";
+          } else {
+            await handleErrorResponse("POST /api/v1/server/start", response);
+          }
+        };
+
+        const button = document.getElementById("start-button");
+        button.onclick = startServer;
+        button.disabled = false;
       })();
     </script>
   </body>

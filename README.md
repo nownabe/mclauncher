@@ -22,6 +22,9 @@ export FIRESTORE_EMULATOR_HOST="localhost:8080"
 export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/gcpproject.credentials.json"
 export INSTANCE_ZONE="asia-northeast1-a"
 export INSTANCE_NAME="minecraft-instance"
+export TITLE="mclauncher"
+export SHUTTER_EMAIL="mclauncher@example.com"
+export SHUTTER_COUNT="2"
 ```
 
 If you haven't added your email as an authorized user, run `tools/add_authorized_users.py`.
@@ -55,6 +58,8 @@ Environment variables:
 * `PORT` (required)
 * `INSTANCE_ZONE` (required)
 * `INSTANCE_NAME` (required)
+* `SHUTTER_EMAIL` (required) - email of service account which calls `/shutter`.
 * `FIREBASE_CREDENTIALS_JSON` (required) - used for Firebase Authentication and Firestore.
 * `TITLE` (optional) - default is `mclauncher`.
 * `WEB_CONCURRENCY` (optional) - default is `4`.
+* `SHUTTER_COUNT` (optional) - If the count of consecutive vacant of the server counted by `/shutter` exceeds this count, `/shutter` shuts down the instance.

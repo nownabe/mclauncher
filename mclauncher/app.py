@@ -1,11 +1,12 @@
 '''Create app'''
 
+from logging import getLogger
 from os import path
-from typing import Callable
+from typing import Callable, Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status, Header
+from fastapi.exceptions import HTTPException
 from firebase_admin.auth import InvalidIdTokenError, CertificateFetchError, ExpiredIdTokenError, RevokedIdTokenError, UserDisabledError
-from starlette import status
 from starlette.templating import Jinja2Templates
 from starlette.responses import HTMLResponse, JSONResponse
 from mclauncher.instance import Instance
@@ -15,6 +16,7 @@ from mclauncher.minecraft import MinecraftProtocol
 from .api.v1 import create_app as create_v1
 
 _AUTH_SCHEME = "Bearer"
+logger = getLogger('uvicorn')
 
 
 def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str], bool]):
@@ -66,6 +68,8 @@ def create_app(
         connect_minecraft: Callable[[str], MinecraftProtocol],
         get_instance: Callable[[], Instance],
         start_instance: Callable[[], None],
+        shutter_authorize: Callable[[str], bool],
+        shutdown: Callable[[], None],
 ):
     app = FastAPI()
     templates = Jinja2Templates(
@@ -94,5 +98,39 @@ def create_app(
             "index.html",
             context={"request": request, "title": title}
         )
+
+    @app.post("/shutter", status_code=status.HTTP_200_OK)
+    async def _shutter(authorization: Optional[str] = Header(None)):
+        if authorization is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="not authorized",
+            )
+
+        try:
+            ok = shutter_authorize(authorization)
+        except Exception as error:
+            logger.error('shutter_authorize() in /shutter: %r', error)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="internal server error"
+            ) from error
+
+        if not ok:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="forbidden",
+            )
+
+        try:
+            await shutdown()
+        except Exception as error:
+            logger.error('shutdown() in /shutter: %r', error)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="internal server error"
+            ) from error
+
+        return {"ok": True}
 
     return app

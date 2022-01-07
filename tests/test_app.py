@@ -29,6 +29,14 @@ def start_instance():
     pass
 
 
+def shutter_authorize(email: str):
+    return True
+
+
+async def shutdown():
+    pass
+
+
 status = {
     'description': {
         'text': 'A Minecraft Server',
@@ -51,6 +59,8 @@ def create_client(
     connect_minecraft=connect_minecraft(status),
     get_instance=get_instance(),
     start_instance=start_instance,
+    shutter_authorize=shutter_authorize,
+    shutdown=shutdown,
 ):
     app = create_app(
         title="mclauncher",
@@ -59,6 +69,8 @@ def create_client(
         connect_minecraft=connect_minecraft,
         get_instance=get_instance,
         start_instance=start_instance,
+        shutter_authorize=shutter_authorize,
+        shutdown=shutdown,
     )
     return TestClient(app)
 

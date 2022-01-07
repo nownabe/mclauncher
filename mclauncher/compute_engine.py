@@ -55,3 +55,27 @@ def start_instance() -> bool:
         ).execute()
 
     return True
+
+
+def stop_instance() -> bool:
+    request = compute.instances().stop(
+        project=project,
+        zone=zone,
+        instance=name,
+    )
+    result = request.execute()
+
+    while True:
+        if result['status'] == 'DONE':
+            if 'error' in result:
+                raise Exception(result['error'])
+            break
+
+        time.sleep(0.5)
+        result = compute.zoneOperations().get(
+            project=project,
+            zone=zone,
+            operation=result['name'],
+        ).execute()
+
+    return True

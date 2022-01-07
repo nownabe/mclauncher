@@ -12,12 +12,12 @@ docker pull ghcr.io/nownabe-dev/mclauncher:latest
 
 ### Run on Google Cloud
 
-(not tested)
-
 You can run mclauncher on [Cloud Run](https://cloud.google.com/run) by clicking this button.
 
 [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run)
 
+* You should add `roles/compute.instanceAdmin.v1` for your Minecraft server instance to the service account used for the Cloud Run service. If you want to minimize permissions, you can create your own custom role.
+* Firestore and Firebase Authentication must be initialized.
 
 ### Configurations
 

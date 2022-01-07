@@ -1,5 +1,37 @@
 # mclauncher
 
+## Getting started
+
+### Use Docker image
+
+You can quickly start with pre-built docker image.
+
+```bash
+docker pull ghcr.io/nownabe-dev/mclauncher:latest
+```
+
+### Run on Google Cloud
+
+(not tested)
+
+You can run mclauncher on [Cloud Run](https://cloud.google.com/run) by clicking this button.
+
+[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run)
+
+
+### Configurations
+
+Environment variables:
+
+* `PORT` (required)
+* `INSTANCE_ZONE` (required)
+* `INSTANCE_NAME` (required)
+* `SHUTTER_EMAIL` (required) - email of service account which calls `/shutter`.
+* `FIREBASE_CREDENTIALS_JSON` (required) - used for Firebase Authentication and Firestore.
+* `TITLE` (optional) - default is `mclauncher`.
+* `WEB_CONCURRENCY` (optional) - default is `4`.
+* `SHUTTER_COUNT` (optional) - If the count of consecutive vacant of the server counted by `/shutter` exceeds this count, `/shutter` shuts down the instance.
+
 ## Development on Codespaces
 
 Install dependencies with [poetry](https://python-poetry.org/).
@@ -48,18 +80,3 @@ Test.
 ```bash
 poetry run pytest
 ```
-
-## Deploy
-
-### Configurations
-
-Environment variables:
-
-* `PORT` (required)
-* `INSTANCE_ZONE` (required)
-* `INSTANCE_NAME` (required)
-* `SHUTTER_EMAIL` (required) - email of service account which calls `/shutter`.
-* `FIREBASE_CREDENTIALS_JSON` (required) - used for Firebase Authentication and Firestore.
-* `TITLE` (optional) - default is `mclauncher`.
-* `WEB_CONCURRENCY` (optional) - default is `4`.
-* `SHUTTER_COUNT` (optional) - If the count of consecutive vacant of the server counted by `/shutter` exceeds this count, `/shutter` shuts down the instance.

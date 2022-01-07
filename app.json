@@ -1,0 +1,38 @@
+{
+    "name": "mclauncher",
+    "env": {
+        "INSTANCE_ZONE": {
+            "description": "Compute Engine zone where you run your minecraft server.",
+            "required": true
+        },
+        "INSTANCE_NAME": {
+            "description": "Instance name running your minecraft server on Compute Engine.",
+            "required": true
+        },
+        "SHUTTER_EMAIL": {
+            "description": "Email of service account which calls /shutter endpoint periodically. Typically, this service account is specified on Cloud Scheduler",
+            "required": true
+        },
+        "FIREBASE_CREDENTIALS_JSON": {
+            "description": "JSON of firebase service account which is used to access Firebase Authentication and Firestore.",
+            "required": true
+        },
+        "TITLE": {
+            "description": "Title used at index.html. [mclauncher]",
+            "required": false
+        },
+        "WEB_CONCURRENCY": {
+            "description": "Number of Uvicorn's worker processes. [4]",
+            "required": false
+        },
+        "SHUTTER_COUNT": {
+            "description": "If /shutter counts a streak of this number that your Minecraft server is not connected, the server would be shutted down.",
+            "required": false
+        }
+    },
+    "options": {
+        "allow-unauthenticated": true,
+        "memory": "256Mi",
+        "cpu": 1
+    }
+}

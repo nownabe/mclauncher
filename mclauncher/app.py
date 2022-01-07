@@ -99,7 +99,7 @@ def create_app(
             context={"request": request, "title": title}
         )
 
-    @app.post("/shutter", status_code=status.HTTP_204_NO_CONTENT)
+    @app.post("/shutter", status_code=status.HTTP_200_OK)
     async def _shutter(authorization: Optional[str] = Header(None)):
         if authorization is None:
             raise HTTPException(
@@ -131,6 +131,6 @@ def create_app(
                 detail="internal server error"
             ) from error
 
-        return None
+        return {"ok": True}
 
     return app

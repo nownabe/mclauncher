@@ -20,7 +20,7 @@ jobs:
       id: set-revision
       with:
         result-encoding: string
-        script: return context.ref.replace('v', '')
+        script: return context.ref.substring(11)
     - uses: docker/build-push-action@v2
       with:
         context: .

@@ -17,7 +17,7 @@ You can run mclauncher on [Cloud Run](https://cloud.google.com/run) by clicking 
 [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run)
 
 * You should add `roles/compute.instanceAdmin.v1` for your Minecraft server instance to the service account used for the Cloud Run service. If you want to minimize permissions, you can create your own custom role.
-* Firestore and Firebase Authentication must be initialized.
+* Firestore and Firebase Authentication must be initialized. For now, mclauncher supports only Google provider for Firebase Authentication.
 
 ### Configurations
 

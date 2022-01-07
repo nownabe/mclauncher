@@ -15,6 +15,7 @@ from mclauncher.shutter import build_shutdown, build_shutter_authorize
 def connect_minecraft(address: str) -> MinecraftProtocol:
     return MinecraftConnection(address)
 
+
 shutter_authorize = build_shutter_authorize(
     authorized_email=environ['SHUTTER_EMAIL'],
 )

@@ -1,9 +1,12 @@
 '''Firebase client for mclauncher'''
 
 
+import json
 from typing import Any
 from firebase_admin import initialize_app, credentials, firestore, auth
 from google.cloud.firestore_v1 import transforms
+
+from mclauncher.config import Config
 
 
 class Firebase:
@@ -12,18 +15,12 @@ class Firebase:
     __SHUTTER_DOCUMENT = 'shutter'
     __SHUTTER_VACANT_STREAK_KEY = 'vacant_streak'
 
-    def __init__(self, credential: dict = None, project: str = None):
-        options = None
-        if project is not None:
-            options = {'project_id': project}
-
-        if credential is not None:
-            credential = credentials.Certificate(credential)
-
-        self.__app = initialize_app(
-            credential=credential,
-            options=options,
-        )
+    def __init__(self, config: Config):
+        if config.firebase_credentials_json is None:
+            initialize_app(options={'project_id': 'project-id'})
+        else:
+            credential = credentials.Certificate(json.loads(config.firebase_credentials_json))
+            initialize_app(credential=credential)
 
         self.__firestore = firestore.client()
 

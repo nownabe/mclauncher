@@ -9,10 +9,12 @@ from fastapi.exceptions import HTTPException
 from firebase_admin.auth import InvalidIdTokenError, CertificateFetchError, ExpiredIdTokenError, RevokedIdTokenError, UserDisabledError
 from starlette.templating import Jinja2Templates
 from starlette.responses import HTMLResponse, JSONResponse
+from mclauncher.config import Config
 from mclauncher.firebase import Firebase
 from mclauncher.instance import Instance
 
 from mclauncher.minecraft import MinecraftProtocol
+from mclauncher.shutter import build_shutdown, build_shutter_authorize
 
 from .api.v1 import create_app as create_v1
 
@@ -63,19 +65,26 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
 
 
 def create_app(
-        title: str,
-        firebase_config_json: str,
-        firebase: Firebase,
-        verify_id_token: Callable,
+        config: Config,
         connect_minecraft: Callable[[str], MinecraftProtocol],
         get_instance: Callable[[], Instance],
         start_instance: Callable[[], None],
-        shutter_authorize: Callable[[str], bool],
-        shutdown: Callable[[], None],
+        stop_instance: Callable[[], None],
 ):
     app = FastAPI()
     templates = Jinja2Templates(
         directory=path.join(path.dirname(__file__), 'templates'),
+    )
+    firebase = Firebase(config)
+    shutter_authorize = build_shutter_authorize(
+        authorized_email=config.shutter_authorized_email,
+    )
+    shutdown = build_shutdown(
+        connect_minecraft=connect_minecraft,
+        get_instance=get_instance,
+        stop_instance=stop_instance,
+        firebase=firebase,
+        shutdown_count=config.shutter_count_to_shutdown,
     )
 
     v1 = create_v1(
@@ -86,7 +95,7 @@ def create_app(
 
     _authorize(
         app=v1,
-        verify_id_token=verify_id_token,
+        verify_id_token=firebase.verify_id_token,
         is_authorized_user=firebase.is_authorized_user
     )
     app.mount("/api/v1", v1)
@@ -100,8 +109,8 @@ def create_app(
             "index.html",
             context={
                 "request": request,
-                "title": title,
-                "firebase_config_json": firebase_config_json
+                "title": config.title,
+                "firebase_config_json": config.firebase_config_json
             }
         )
 

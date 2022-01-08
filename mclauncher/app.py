@@ -65,11 +65,11 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
 
 
 def create_app(
-        config: Config,
-        connect_minecraft: Callable[[str], MinecraftProtocol],
-        get_instance: Callable[[], Instance],
-        start_instance: Callable[[], None],
-        stop_instance: Callable[[], None],
+    config: Config,
+    connect_minecraft: Callable[[str], MinecraftProtocol],
+    get_instance: Callable[[], Instance],
+    start_instance: Callable[[], None],
+    stop_instance: Callable[[], None],
 ):
     app = FastAPI()
     templates = Jinja2Templates(

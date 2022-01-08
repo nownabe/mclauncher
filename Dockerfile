@@ -4,7 +4,6 @@ FROM python:3.10-slim-bullseye
 
 ENV POETRY_NO_INTERACTION=1
 ENV WEB_CONCURRENCY=4
-ENV TITLE=mclauncher
 
 WORKDIR /app
 

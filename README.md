@@ -50,15 +50,12 @@ firebase emulators:start
 Set environment variables.
 
 ```bash
-export FIREBASE_CREDENTIALS_JSON="$(cat firebase.credentials.json)"
 export FIREBASE_CONFIG_JSON='{"apiKey":"...", ...}'
 export FIRESTORE_EMULATOR_HOST="localhost:8080"
 export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/gcpproject.credentials.json"
 export INSTANCE_ZONE="asia-northeast1-a"
 export INSTANCE_NAME="minecraft-instance"
-export TITLE="mclauncher"
 export SHUTTER_AUTHORIZED_EMAIL="mclauncher@example.com"
-export SHUTTER_COUNT_TO_SHUTDOWN="2"
 ```
 
 If you haven't added your email as an authorized user, run `tools/add_authorized_users.py`.

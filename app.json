@@ -30,7 +30,7 @@
             "required": false
         },
         "SHUTTER_COUNT_TO_SHUTDOWN": {
-            "description": "If /shutter counts a streak of this number that your Minecraft server is not connected, the server would be shutted down.",
+            "description": "If /shutter counts a streak of this number that your Minecraft server is not connected, the server would be shutted down. [2]",
             "required": false
         }
     },

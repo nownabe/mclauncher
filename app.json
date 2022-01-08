@@ -17,6 +17,10 @@
             "description": "JSON of firebase service account which is used to access Firebase Authentication and Firestore.",
             "required": true
         },
+        "FIREBASE_CONFIG_JSON": {
+            "description": "Firebase configuration as a JSON format.",
+            "required": true
+        },
         "TITLE": {
             "description": "Title used at index.html. [mclauncher]",
             "required": false

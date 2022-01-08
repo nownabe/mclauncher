@@ -63,6 +63,7 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
 
 def create_app(
         title: str,
+        firebase_config_json: str,
         verify_id_token: Callable,
         is_authorized_user: Callable[[str], bool],
         connect_minecraft: Callable[[str], MinecraftProtocol],
@@ -96,7 +97,11 @@ def create_app(
         """
         return templates.TemplateResponse(
             "index.html",
-            context={"request": request, "title": title}
+            context={
+                "request": request,
+                "title": title,
+                "firebase_config_json": firebase_config_json
+            }
         )
 
     @app.post("/shutter", status_code=status.HTTP_200_OK)

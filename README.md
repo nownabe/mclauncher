@@ -28,6 +28,7 @@ Environment variables:
 * `INSTANCE_NAME` (required)
 * `SHUTTER_EMAIL` (required) - email of service account which calls `/shutter`.
 * `FIREBASE_CREDENTIALS_JSON` (required) - used for Firebase Authentication and Firestore.
+* `FIREBASE_CONFIG_JSON` (required)
 * `TITLE` (optional) - default is `mclauncher`.
 * `WEB_CONCURRENCY` (optional) - default is `4`.
 * `SHUTTER_COUNT` (optional) - If the count of consecutive vacant of the server counted by `/shutter` exceeds this count, `/shutter` shuts down the instance.
@@ -50,6 +51,7 @@ Set environment variables.
 
 ```bash
 export FIREBASE_CREDENTIALS_JSON="$(cat firebase.credentials.json)"
+export FIREBASE_CONFIG_JSON='{"apiKey":"...", ...}'
 export FIRESTORE_EMULATOR_HOST="localhost:8080"
 export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/gcpproject.credentials.json"
 export INSTANCE_ZONE="asia-northeast1-a"

@@ -9,12 +9,12 @@ from fastapi.exceptions import HTTPException
 from firebase_admin.auth import InvalidIdTokenError, CertificateFetchError, ExpiredIdTokenError, RevokedIdTokenError, UserDisabledError
 from starlette.templating import Jinja2Templates
 from starlette.responses import HTMLResponse, JSONResponse
+
+from mclauncher.compute_engine import ComputeEngine
 from mclauncher.config import Config
 from mclauncher.firebase import Firebase
-from mclauncher.instance import Instance
-
 from mclauncher.minecraft import MinecraftProtocol
-from mclauncher.shutter import build_shutdown, build_shutter_authorize
+from mclauncher.shutter import Shutter
 
 from .api.v1 import create_app as create_v1
 
@@ -67,30 +67,25 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
 def create_app(
     config: Config,
     connect_minecraft: Callable[[str], MinecraftProtocol],
-    get_instance: Callable[[], Instance],
-    start_instance: Callable[[], None],
-    stop_instance: Callable[[], None],
+    firebase_class: type[Firebase] = Firebase,
+    compute_engine_class: type[ComputeEngine] = ComputeEngine,
 ):
     app = FastAPI()
     templates = Jinja2Templates(
         directory=path.join(path.dirname(__file__), 'templates'),
     )
-    firebase = Firebase(config)
-    shutter_authorize = build_shutter_authorize(
-        authorized_email=config.shutter_authorized_email,
-    )
-    shutdown = build_shutdown(
+    firebase = firebase_class(config)
+    compute_engine = compute_engine_class(config)
+    shutter = Shutter(
+        config=config,
         connect_minecraft=connect_minecraft,
-        get_instance=get_instance,
-        stop_instance=stop_instance,
         firebase=firebase,
-        shutdown_count=config.shutter_count_to_shutdown,
+        compute_engine=compute_engine,
     )
 
     v1 = create_v1(
         connect_minecraft=connect_minecraft,
-        get_instance=get_instance,
-        start_instance=start_instance,
+        compute_engine=compute_engine,
     )
 
     _authorize(
@@ -123,7 +118,7 @@ def create_app(
             )
 
         try:
-            ok = shutter_authorize(authorization)
+            ok = shutter.shutter_authorize(authorization)
         except Exception as error:
             logger.error('shutter_authorize() in /shutter: %r', error)
             raise HTTPException(
@@ -138,7 +133,7 @@ def create_app(
             )
 
         try:
-            await shutdown()
+            await shutter.shutdown()
         except Exception as error:
             logger.error('shutdown() in /shutter: %r', error)
             raise HTTPException(

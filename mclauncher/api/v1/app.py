@@ -4,8 +4,8 @@ from logging import getLogger
 
 from typing import Callable
 from fastapi import FastAPI, status, HTTPException
-from mclauncher.instance import Instance
 
+from mclauncher.compute_engine import ComputeEngine
 from mclauncher.minecraft import MinecraftProtocol, MinecraftStatus
 
 from . import schema
@@ -16,14 +16,13 @@ logger = getLogger('uvicorn')
 
 def create_app(
     connect_minecraft: Callable[[str], MinecraftProtocol],
-    get_instance: Callable[[], Instance],
-    start_instance: Callable[[], None],
+    compute_engine: ComputeEngine,
 ) -> FastAPI:
     app = FastAPI(root_path="/api/v1")
 
     def _get_instance():
         try:
-            return get_instance()
+            return compute_engine.get_instance()
         except Exception as error:
             logger.error('get_instance(): %r', error)
             raise HTTPException(
@@ -71,7 +70,7 @@ def create_app(
             return schema.StartServerResponse(ok=False)
 
         try:
-            start_instance()
+            compute_engine.start_instance()
             return schema.StartServerResponse(ok=True)
         except Exception as error:
             logger.error('start_instance(): %r', error)

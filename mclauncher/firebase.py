@@ -16,11 +16,8 @@ class Firebase:
     __SHUTTER_VACANT_STREAK_KEY = 'vacant_streak'
 
     def __init__(self, config: Config):
-        if config.firebase_credentials_json is None:
-            initialize_app(options={'project_id': 'project-id'})
-        else:
-            credential = credentials.Certificate(json.loads(config.firebase_credentials_json))
-            initialize_app(credential=credential)
+        credential = credentials.Certificate(json.loads(config.firebase_credentials_json))
+        initialize_app(credential=credential)
 
         self.__firestore = firestore.client()
 

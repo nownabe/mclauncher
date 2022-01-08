@@ -19,16 +19,16 @@ class Firebase:
         credential = credentials.Certificate(json.loads(config.firebase_credentials_json))
         initialize_app(credential=credential)
 
-        self.__firestore = firestore.client()
+        self._firestore = firestore.client()
 
     def is_authorized_user(self, email: str) -> bool:
-        doc_ref = self.__firestore.collection(
+        doc_ref = self._firestore.collection(
             self.__AUTHORIZED_USERS_COLLECTION
         )
         return any(user.get('email') == email for user in doc_ref.stream())
 
     def count_consecutive_vacant(self) -> int:
-        collection_ref = self.__firestore.collection(self.__SHUTTER_COLLECTION)
+        collection_ref = self._firestore.collection(self.__SHUTTER_COLLECTION)
         doc_ref = collection_ref.document(self.__SHUTTER_DOCUMENT)
 
         if not doc_ref.get().exists:
@@ -39,7 +39,7 @@ class Firebase:
         return doc_ref.get().get(self.__SHUTTER_VACANT_STREAK_KEY)
 
     def reset_consecutive_vacant(self) -> None:
-        collection_ref = self.__firestore.collection(self.__SHUTTER_COLLECTION)
+        collection_ref = self._firestore.collection(self.__SHUTTER_COLLECTION)
         doc_ref = collection_ref.document(self.__SHUTTER_DOCUMENT)
         doc_ref.set({self.__SHUTTER_VACANT_STREAK_KEY: 0})
 

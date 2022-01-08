@@ -1,40 +1,51 @@
 """Tests for main.py"""
 
-from typing import Callable
+from typing import Any
 from fastapi.testclient import TestClient
+from firebase_admin import firestore, initialize_app
 
 from mclauncher.app import create_app
+from mclauncher.compute_engine import ComputeEngine
+from mclauncher.config import Config
+from mclauncher.firebase import Firebase
 from mclauncher.instance import Instance
 from mclauncher.minecraft import MinecraftProtocolBuffer
 
 from .util import connect_minecraft
 
 
-def verify_id_token(email: str):
-    return {'email': email}
+# Initialize Firestore
+initialize_app(options={'projectId': 'test-project'})
+fc = firestore.client()
+fc.collection('authorized_users').add({'email': 'authorized@example.com'})
 
 
-def is_authorized_user(email: str):
-    return email == 'authorized'
+class MockConfig(Config):
+    shutter_authorized_email: str = 'shutter@example.com'
+    instance_zone: str = 'asia-northeast1-a'
+    instance_name: str = 'minecraft'
+    is_running: bool = True
 
 
-def get_instance(is_running: bool = True) -> Callable[[], Instance]:
-    def _get_instance() -> Instance:
-        return Instance(is_running=is_running, address="dummy")
+class MockFirebase(Firebase):
+    def __init__(self, config: Config):
+        self._firestore = firestore.client()
 
-    return _get_instance
+    def verify_id_token(self, id_token: str) -> Any:
+        return {'email': id_token}
 
+class MockComputeEngine(ComputeEngine):
+    def __init__(self, config):
+        self.config = config
 
-def start_instance():
-    pass
+    def get_instance(self) -> Instance:
+        return Instance(is_running=self.config.is_running, address="dummy")
 
+    def start_instance(self) -> bool:
+        return True
 
-def shutter_authorize(email: str):
-    return True
-
-
-async def shutdown():
-    pass
+    def stop_instance(self) -> bool:
+        return True
 
 
 status = {
@@ -54,24 +65,17 @@ status = {
 
 
 def create_client(
-    verify_id_token=verify_id_token,
-    is_authorized_user=is_authorized_user,
     connect_minecraft=connect_minecraft(status),
-    get_instance=get_instance(),
-    start_instance=start_instance,
-    shutter_authorize=shutter_authorize,
-    shutdown=shutdown,
+    firebase_class=MockFirebase,
+    compute_engine_class=MockComputeEngine,
+    is_running=True,
 ):
+    config = MockConfig(is_running=is_running)
     app = create_app(
-        title="mclauncher",
-        firebase_config_json='{}',
-        verify_id_token=verify_id_token,
-        is_authorized_user=is_authorized_user,
+        config=config,
         connect_minecraft=connect_minecraft,
-        get_instance=get_instance,
-        start_instance=start_instance,
-        shutter_authorize=shutter_authorize,
-        shutdown=shutdown,
+        firebase_class=firebase_class,
+        compute_engine_class=compute_engine_class,
     )
     return TestClient(app)
 
@@ -89,7 +93,7 @@ def test_index():
 def test_get_api_v1_server_authorized():
     response = client.get(
         '/api/v1/server',
-        headers={'Authorization': 'Bearer authorized'}
+        headers={'Authorization': 'Bearer authorized@example.com'}
     )
     assert response.status_code == 200
     assert response.json() == {'running': True, 'players': [
@@ -106,10 +110,10 @@ def test_get_api_v1_server_unauthorized():
 
 
 def test_post_api_v1_server_instance_not_running():
-    client = create_client(get_instance=get_instance(False))
+    client = create_client(is_running=False)
     response = client.get(
         '/api/v1/server',
-        headers={'Authorization': 'Bearer authorized'}
+        headers={'Authorization': 'Bearer authorized@example.com'}
     )
     assert response.status_code == 200
     assert response.json() == {'running': False, 'players': []}
@@ -126,7 +130,7 @@ def test_post_api_v1_server_server_not_ready():
     )
     response = client.get(
         '/api/v1/server',
-        headers={'Authorization': 'Bearer authorized'}
+        headers={'Authorization': 'Bearer authorized@example.com'}
     )
     assert response.status_code == 500
 
@@ -134,7 +138,7 @@ def test_post_api_v1_server_server_not_ready():
 def test_post_api_v1_server_start_authorized():
     response = client.post(
         '/api/v1/server/start',
-        headers={'Authorization': 'Bearer authorized'}
+        headers={'Authorization': 'Bearer authorized@example.com'}
     )
     assert response.status_code == 200
     assert response.json() == {'ok': False}
@@ -150,10 +154,10 @@ def test_post_api_v1_server_start_unauthorized():
 
 
 def test_post_api_v1_server_start_success():
-    client = create_client(get_instance=get_instance(False))
+    client = create_client(is_running=False)
     response = client.post(
         '/api/v1/server/start',
-        headers={'Authorization': 'Bearer authorized'}
+        headers={'Authorization': 'Bearer authorized@example.com'}
     )
     assert response.status_code == 200
     assert response.json() == {'ok': True}

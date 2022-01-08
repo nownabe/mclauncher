@@ -51,6 +51,7 @@ Set environment variables.
 
 ```bash
 export FIREBASE_CONFIG_JSON='{"apiKey":"...", ...}'
+export FIREBASE_CREDENTIALS_JSON="$(cat firebase.credentials.json)"
 export FIRESTORE_EMULATOR_HOST="localhost:8080"
 export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/gcpproject.credentials.json"
 export INSTANCE_ZONE="asia-northeast1-a"

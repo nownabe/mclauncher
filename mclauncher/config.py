@@ -7,8 +7,8 @@ class Config(BaseSettings):
 
     firebase_credentials_json: str = Field(env='firebase_credentials_json')
 
-    shutter_authorized_email: str = Field(env='shutter_email')
-    shutter_count_to_shutdown: int = Field(env='shutter_count')
+    shutter_authorized_email: str = Field(env='shutter_authorized_email')
+    shutter_count_to_shutdown: int = Field(env='shutter_count_to_shutdown')
 
     instance_zone: str = Field(env='instance_zone')
     instance_name: str = Field(env='instance_name')

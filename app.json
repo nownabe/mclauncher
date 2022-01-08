@@ -9,7 +9,7 @@
             "description": "Instance name running your minecraft server on Compute Engine.",
             "required": true
         },
-        "SHUTTER_EMAIL": {
+        "SHUTTER_AUTHORIZED_EMAIL": {
             "description": "Email of service account which calls /shutter endpoint periodically. Typically, this service account is specified on Cloud Scheduler",
             "required": true
         },
@@ -29,7 +29,7 @@
             "description": "Number of Uvicorn's worker processes. [4]",
             "required": false
         },
-        "SHUTTER_COUNT": {
+        "SHUTTER_COUNT_TO_SHUTDOWN": {
             "description": "If /shutter counts a streak of this number that your Minecraft server is not connected, the server would be shutted down.",
             "required": false
         }

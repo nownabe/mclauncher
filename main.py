@@ -2,14 +2,18 @@
 RESTful API and index.html for mclauncher.
 """
 
+import json
 from os import environ
-from firebase_admin import auth
 
-from firebase import count_consecutive_vacant, is_authorized_user, reset_consecutive_vacant
 from mclauncher.app import create_app
+from mclauncher.firebase import Firebase
 from mclauncher.minecraft import MinecraftConnection, MinecraftProtocol
 from mclauncher.compute_engine import get_instance, start_instance, stop_instance
 from mclauncher.shutter import build_shutdown, build_shutter_authorize
+
+
+
+firebase = Firebase(json.loads(environ['FIREBASE_CREDENTIALS_JSON']))
 
 
 def connect_minecraft(address: str) -> MinecraftProtocol:
@@ -23,8 +27,7 @@ shutdown = build_shutdown(
     connect_minecraft=connect_minecraft,
     get_instance=get_instance,
     stop_instance=stop_instance,
-    count_consecutive_vacant=count_consecutive_vacant,
-    reset_consecutive_vacant=reset_consecutive_vacant,
+    firebase=firebase,
     shutdown_count=int(environ["SHUTTER_COUNT"])
 )
 
@@ -32,8 +35,8 @@ shutdown = build_shutdown(
 app = create_app(
     title=environ["TITLE"],
     firebase_config_json=environ["FIREBASE_CONFIG_JSON"],
-    verify_id_token=auth.verify_id_token,
-    is_authorized_user=is_authorized_user,
+    firebase=firebase,
+    verify_id_token=firebase.verify_id_token,
     connect_minecraft=connect_minecraft,
     get_instance=get_instance,
     start_instance=start_instance,

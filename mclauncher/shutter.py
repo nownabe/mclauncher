@@ -2,6 +2,7 @@ from typing import Awaitable, Callable
 
 from google.auth.transport.requests import Request as AuthRequest
 from google.oauth2.id_token import verify_token
+from mclauncher.firebase import Firebase
 from mclauncher.instance import Instance
 
 from mclauncher.minecraft import MinecraftProtocol, MinecraftStatus
@@ -23,15 +24,14 @@ def build_shutdown(
     connect_minecraft: Callable[[str], MinecraftProtocol],
     get_instance: Callable[[], Instance],
     stop_instance: Callable[[], bool],
-    count_consecutive_vacant: Callable[[], int],
-    reset_consecutive_vacant: Callable[[], None],
+    firebase: Firebase,
     shutdown_count: int,
 ) -> Callable[[], Awaitable[None]]:
     async def shutdown():
         instance = get_instance()
 
         if not instance.is_running:
-            reset_consecutive_vacant()
+            firebase.reset_consecutive_vacant()
             return
 
         connection = connect_minecraft(instance.address)
@@ -39,12 +39,12 @@ def build_shutdown(
         await mc_status.read_status()
 
         if len(mc_status.players()) > 0:
-            reset_consecutive_vacant()
+            firebase.reset_consecutive_vacant()
             return
 
-        count = count_consecutive_vacant()
+        count = firebase.count_consecutive_vacant()
         if count >= shutdown_count:
             stop_instance()
-            reset_consecutive_vacant()
+            firebase.reset_consecutive_vacant()
 
     return shutdown

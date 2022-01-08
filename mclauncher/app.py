@@ -9,6 +9,7 @@ from fastapi.exceptions import HTTPException
 from firebase_admin.auth import InvalidIdTokenError, CertificateFetchError, ExpiredIdTokenError, RevokedIdTokenError, UserDisabledError
 from starlette.templating import Jinja2Templates
 from starlette.responses import HTMLResponse, JSONResponse
+from mclauncher.firebase import Firebase
 from mclauncher.instance import Instance
 
 from mclauncher.minecraft import MinecraftProtocol
@@ -64,8 +65,8 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
 def create_app(
         title: str,
         firebase_config_json: str,
+        firebase: Firebase,
         verify_id_token: Callable,
-        is_authorized_user: Callable[[str], bool],
         connect_minecraft: Callable[[str], MinecraftProtocol],
         get_instance: Callable[[], Instance],
         start_instance: Callable[[], None],
@@ -86,7 +87,7 @@ def create_app(
     _authorize(
         app=v1,
         verify_id_token=verify_id_token,
-        is_authorized_user=is_authorized_user
+        is_authorized_user=firebase.is_authorized_user
     )
     app.mount("/api/v1", v1)
 

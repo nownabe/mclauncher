@@ -64,6 +64,7 @@ def create_client(
 ):
     app = create_app(
         title="mclauncher",
+        firebase_config_json='{}',
         verify_id_token=verify_id_token,
         is_authorized_user=is_authorized_user,
         connect_minecraft=connect_minecraft,

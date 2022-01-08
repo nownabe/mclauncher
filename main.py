@@ -31,6 +31,7 @@ shutdown = build_shutdown(
 
 app = create_app(
     title=environ["TITLE"],
+    firebase_config_json=environ["FIREBASE_CONFIG_JSON"],
     verify_id_token=auth.verify_id_token,
     is_authorized_user=is_authorized_user,
     connect_minecraft=connect_minecraft,

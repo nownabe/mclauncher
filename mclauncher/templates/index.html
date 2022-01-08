@@ -86,20 +86,7 @@
         signInWithRedirect,
       } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-      // TODO: Add SDKs for Firebase products that you want to use
-      // https://firebase.google.com/docs/web/setup#available-libraries
-
-      // Your web app's Firebase configuration
-      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-      const firebaseConfig = {
-        apiKey: "AIzaSyBEjedGmJYY3aetyY6UrB4d92fN5XjmrXo",
-        authDomain: "mclauncher-spark.firebaseapp.com",
-        projectId: "mclauncher-spark",
-        storageBucket: "mclauncher-spark.appspot.com",
-        messagingSenderId: "1032541656466",
-        appId: "1:1032541656466:web:12d1d84dbe8a4e7f739d4b",
-        measurementId: "G-PR20LWY6DG",
-      };
+      const firebaseConfig = JSON.parse(`{{ firebase_config_json | safe }}`);
 
       // Initialize Firebase
       const app = initializeApp(firebaseConfig);

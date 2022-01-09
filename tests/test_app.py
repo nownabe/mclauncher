@@ -1,9 +1,8 @@
 """Tests for main.py"""
 
 from typing import Any, ClassVar
+
 from fastapi.testclient import TestClient
-from firebase_admin import initialize_app
-from google.cloud import firestore
 
 from mclauncher.app import create_app
 from mclauncher.compute_engine import ComputeEngine

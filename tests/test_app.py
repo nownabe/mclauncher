@@ -145,7 +145,7 @@ def test_post_api_v1_server_instance_not_running():
     assert response.json() == {'running': False, 'players': []}
 
 
-def test_post_api_v1_server_server_not_ready():
+def test_post_api_v1_server_server_timeout():
     class NotRunningConnection(MinecraftProtocolBuffer):
         async def connect(self):
             raise TimeoutError()
@@ -159,6 +159,23 @@ def test_post_api_v1_server_server_not_ready():
         headers={'Authorization': 'Bearer authorized@example.com'}
     )
     assert response.status_code == 500
+
+
+def test_post_api_v1_server_server_connection_refused():
+    class NotRunningConnection(MinecraftProtocolBuffer):
+        async def connect(self):
+            raise ConnectionRefusedError()
+
+    client = create_client(
+        connect_minecraft=connect_minecraft(
+            status, protocol_class=NotRunningConnection)
+    )
+    response = client.get(
+        '/api/v1/server',
+        headers={'Authorization': 'Bearer authorized@example.com'}
+    )
+    assert response.status_code == 200
+    assert response.json() == {'running': False, 'players': []}
 
 
 def test_post_api_v1_server_start_authorized():

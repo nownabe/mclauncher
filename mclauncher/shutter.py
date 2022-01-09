@@ -1,4 +1,4 @@
-from typing import Awaitable, Callable
+from typing import Callable
 
 from google.auth.transport.requests import Request as AuthRequest
 from google.oauth2.id_token import verify_token

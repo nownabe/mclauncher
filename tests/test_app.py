@@ -23,6 +23,10 @@ class MockConfig(Config):
     instance_name: str = 'minecraft'
     is_running: bool = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.shutter_authorized_email = 'shutter@example.com'
+
 
 class MockFirebase(Firebase):
     counter: ClassVar[int]

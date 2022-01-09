@@ -69,6 +69,7 @@ def create_app(
     connect_minecraft: Callable[[str], MinecraftProtocol],
     firebase_class: type[Firebase] = Firebase,
     compute_engine_class: type[ComputeEngine] = ComputeEngine,
+    shutter_class: type[Shutter] = Shutter,
 ):
     app = FastAPI()
     templates = Jinja2Templates(
@@ -76,7 +77,7 @@ def create_app(
     )
     firebase = firebase_class(config)
     compute_engine = compute_engine_class(config)
-    shutter = Shutter(
+    shutter = shutter_class(
         config=config,
         connect_minecraft=connect_minecraft,
         firebase=firebase,

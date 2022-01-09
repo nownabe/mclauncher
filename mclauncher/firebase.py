@@ -16,7 +16,8 @@ class Firebase:
     __SHUTTER_VACANT_STREAK_KEY = 'vacant_streak'
 
     def __init__(self, config: Config):
-        credential = credentials.Certificate(json.loads(config.firebase_credentials_json))
+        credential = credentials.Certificate(
+            json.loads(config.firebase_credentials_json))
         initialize_app(credential=credential)
 
         self._firestore = firestore.client()
@@ -33,7 +34,8 @@ class Firebase:
         if not doc_ref.get().exists:
             self.reset_consecutive_vacant()
 
-        doc_ref.update({self.__SHUTTER_VACANT_STREAK_KEY: transforms.Increment(1)})
+        doc_ref.update(
+            {self.__SHUTTER_VACANT_STREAK_KEY: transforms.Increment(1)})
 
         return doc_ref.get().get(self.__SHUTTER_VACANT_STREAK_KEY)
 

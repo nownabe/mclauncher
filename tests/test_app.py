@@ -2,7 +2,8 @@
 
 from typing import Any
 from fastapi.testclient import TestClient
-from firebase_admin import firestore, initialize_app
+from firebase_admin import initialize_app
+from google.cloud import firestore
 
 from mclauncher.app import create_app
 from mclauncher.compute_engine import ComputeEngine
@@ -14,13 +15,8 @@ from mclauncher.minecraft import MinecraftProtocolBuffer
 from .util import connect_minecraft
 
 
-# Initialize Firestore
-initialize_app(options={'projectId': 'test-project'})
-fc = firestore.client()
-fc.collection('authorized_users').add({'email': 'authorized@example.com'})
-
-
 class MockConfig(Config):
+    authorized_users: list[str] = ['authorized@example.com']
     shutter_authorized_email: str = 'shutter@example.com'
     instance_zone: str = 'asia-northeast1-a'
     instance_name: str = 'minecraft'
@@ -28,11 +24,23 @@ class MockConfig(Config):
 
 
 class MockFirebase(Firebase):
-    def __init__(self, config: Config):
-        self._firestore = firestore.client()
+    def __init__(self, config: MockConfig):
+        self.authorized_users = config.authorized_users
+        self.counter = 0
+
+    def count_consecutive_vacant(self) -> int:
+        self.counter += 1
+        return self.counter
+
+    def reset_consecutive_vacant(self) -> None:
+        self.counter = 0
 
     def verify_id_token(self, id_token: str) -> Any:
         return {'email': id_token}
+
+    def _authorized_users(self) -> list[str]:
+        return self.authorized_users
+
 
 class MockComputeEngine(ComputeEngine):
     def __init__(self, config):

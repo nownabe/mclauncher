@@ -22,10 +22,9 @@ class Firebase:
         self._firestore = firestore.client()
 
     def is_authorized_user(self, email: str) -> bool:
-        doc_ref = self._firestore.collection(
-            self.__AUTHORIZED_USERS_COLLECTION
+        return any(
+            authorized_email == email for authorized_email in self._authorized_users()
         )
-        return any(user.get('email') == email for user in doc_ref.stream())
 
     def count_consecutive_vacant(self) -> int:
         collection_ref = self._firestore.collection(self.__SHUTTER_COLLECTION)
@@ -45,3 +44,9 @@ class Firebase:
 
     def verify_id_token(self, id_token: str) -> Any:
         return auth.verify_id_token(id_token)
+
+    def _authorized_users(self) -> list[str]:
+        doc_ref = self._firestore.collection(
+            self.__AUTHORIZED_USERS_COLLECTION
+        )
+        return [user.get('email') for user in doc_ref.stream()]

@@ -1,4 +1,4 @@
-from typing import Awaitable, Callable
+from typing import Callable
 
 from google.auth.transport.requests import Request as AuthRequest
 from google.oauth2.id_token import verify_token
@@ -28,7 +28,7 @@ class Shutter:
 
     def shutter_authorize(self, authorization: str) -> bool:
         id_token = authorization[len(_AUTH_SCHEME)+1:]
-        result = verify_token(id_token, AuthRequest())
+        result = self._verify_token(id_token)
         return result["email"] == self.authorized_email
 
     async def shutdown(self):
@@ -50,3 +50,6 @@ class Shutter:
         if count >= self.count_to_shutdown:
             self.compute_engine.stop_instance()
             self.firebase.reset_consecutive_vacant()
+
+    def _verify_token(self, id_token: str):
+        return verify_token(id_token, AuthRequest())

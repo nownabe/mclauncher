@@ -1,9 +1,8 @@
 """Tests for main.py"""
 
-from typing import Any
+from typing import Any, ClassVar
+
 from fastapi.testclient import TestClient
-from firebase_admin import initialize_app
-from google.cloud import firestore
 
 from mclauncher.app import create_app
 from mclauncher.compute_engine import ComputeEngine
@@ -11,6 +10,7 @@ from mclauncher.config import Config
 from mclauncher.firebase import Firebase
 from mclauncher.instance import Instance
 from mclauncher.minecraft import MinecraftProtocolBuffer
+from mclauncher.shutter import Shutter
 
 from .util import connect_minecraft
 
@@ -22,18 +22,24 @@ class MockConfig(Config):
     instance_name: str = 'minecraft'
     is_running: bool = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.shutter_authorized_email = 'shutter@example.com'
+
 
 class MockFirebase(Firebase):
+    counter: ClassVar[int]
+
     def __init__(self, config: MockConfig):
         self.authorized_users = config.authorized_users
-        self.counter = 0
+        MockFirebase.counter = 0
 
     def count_consecutive_vacant(self) -> int:
-        self.counter += 1
-        return self.counter
+        MockFirebase.counter += 1
+        return MockFirebase.counter
 
     def reset_consecutive_vacant(self) -> None:
-        self.counter = 0
+        MockFirebase.counter = 0
 
     def verify_id_token(self, id_token: str) -> Any:
         return {'email': id_token}
@@ -43,17 +49,30 @@ class MockFirebase(Firebase):
 
 
 class MockComputeEngine(ComputeEngine):
+    is_running: ClassVar[bool]
+
     def __init__(self, config):
         self.config = config
+        MockComputeEngine.is_running = config.is_running
 
     def get_instance(self) -> Instance:
-        return Instance(is_running=self.config.is_running, address="dummy")
+        return Instance(is_running=self._is_running(), address="dummy")
 
     def start_instance(self) -> bool:
+        MockComputeEngine.is_running = True
         return True
 
     def stop_instance(self) -> bool:
+        MockComputeEngine.is_running = False
         return True
+
+    def _is_running(self) -> bool:
+        return MockComputeEngine.is_running
+
+
+class MockShutter(Shutter):
+    def _verify_token(self, id_token: str):
+        return {'email': id_token}
 
 
 status = {
@@ -76,6 +95,7 @@ def create_client(
     connect_minecraft=connect_minecraft(status),
     firebase_class=MockFirebase,
     compute_engine_class=MockComputeEngine,
+    shutter_class=MockShutter,
     is_running=True,
 ):
     config = MockConfig(is_running=is_running)
@@ -84,6 +104,7 @@ def create_client(
         connect_minecraft=connect_minecraft,
         firebase_class=firebase_class,
         compute_engine_class=compute_engine_class,
+        shutter_class=shutter_class,
     )
     return TestClient(app)
 
@@ -127,7 +148,7 @@ def test_post_api_v1_server_instance_not_running():
     assert response.json() == {'running': False, 'players': []}
 
 
-def test_post_api_v1_server_server_not_ready():
+def test_post_api_v1_server_server_timeout():
     class NotRunningConnection(MinecraftProtocolBuffer):
         async def connect(self):
             raise TimeoutError()
@@ -141,6 +162,23 @@ def test_post_api_v1_server_server_not_ready():
         headers={'Authorization': 'Bearer authorized@example.com'}
     )
     assert response.status_code == 500
+
+
+def test_post_api_v1_server_server_connection_refused():
+    class NotRunningConnection(MinecraftProtocolBuffer):
+        async def connect(self):
+            raise ConnectionRefusedError()
+
+    client = create_client(
+        connect_minecraft=connect_minecraft(
+            status, protocol_class=NotRunningConnection)
+    )
+    response = client.get(
+        '/api/v1/server',
+        headers={'Authorization': 'Bearer authorized@example.com'}
+    )
+    assert response.status_code == 200
+    assert response.json() == {'running': False, 'players': []}
 
 
 def test_post_api_v1_server_start_authorized():
@@ -169,3 +207,64 @@ def test_post_api_v1_server_start_success():
     )
     assert response.status_code == 200
     assert response.json() == {'ok': True}
+
+
+def test_post_shutter_unauthorized():
+    response = client.post(
+        '/shutter',
+        headers={'Authorization': 'Bearer unauthorized'}
+    )
+    assert response.status_code == 403
+    assert response.json() == {'detail': 'forbidden'}
+
+
+def test_post_shutter_shutdown():
+    client = create_client(
+        connect_minecraft=connect_minecraft({
+            'description': {'text': 'A Minecraft Server'},
+            'players': {'sample': []},
+            'version': {'name': '1.18'}
+        })
+    )
+    response = client.post(
+        '/shutter',
+        headers={'Authorization': 'Bearer shutter@example.com'}
+    )
+    assert response.status_code == 200
+    assert response.json() == {'ok': True}
+    assert MockComputeEngine.is_running
+
+    response = client.post(
+        '/shutter',
+        headers={'Authorization': 'Bearer shutter@example.com'}
+    )
+    assert response.status_code == 200
+    assert response.json() == {'ok': True}
+    assert not MockComputeEngine.is_running
+
+
+def test_post_shutter_reset():
+    client_without_players = create_client(
+        connect_minecraft=connect_minecraft({
+            'description': {'text': 'A Minecraft Server'},
+            'players': {'sample': []},
+            'version': {'name': '1.18'}
+        })
+    )
+    response = client_without_players.post(
+        '/shutter',
+        headers={'Authorization': 'Bearer shutter@example.com'}
+    )
+    assert response.status_code == 200
+    assert response.json() == {'ok': True}
+    assert MockComputeEngine.is_running
+    assert MockFirebase.counter == 1
+
+    response = client.post(
+        '/shutter',
+        headers={'Authorization': 'Bearer shutter@example.com'}
+    )
+    assert response.status_code == 200
+    assert response.json() == {'ok': True}
+    assert MockComputeEngine.is_running
+    assert MockFirebase.counter == 0

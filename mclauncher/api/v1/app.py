@@ -49,6 +49,8 @@ def create_app(
             await mc_status.read_status()
             response.running = True
             response.players = mc_status.players()
+        except ConnectionRefusedError:
+            return response
         except Exception as error:
             logger.error('getting minecraft status: %r', error)
             raise HTTPException(

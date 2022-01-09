@@ -2,7 +2,9 @@ from typing import Awaitable, Callable
 
 from google.auth.transport.requests import Request as AuthRequest
 from google.oauth2.id_token import verify_token
-from mclauncher.instance import Instance
+from mclauncher.compute_engine import ComputeEngine
+from mclauncher.config import Config
+from mclauncher.firebase import Firebase
 
 from mclauncher.minecraft import MinecraftProtocol, MinecraftStatus
 
@@ -10,41 +12,41 @@ from mclauncher.minecraft import MinecraftProtocol, MinecraftStatus
 _AUTH_SCHEME = "Bearer"
 
 
-def build_shutter_authorize(authorized_email: str):
-    def shutter_authorize(authorization: str) -> bool:
+class Shutter:
+    def __init__(
+        self,
+        config: Config,
+        connect_minecraft: Callable[[str], MinecraftProtocol],
+        firebase: Firebase,
+        compute_engine: ComputeEngine
+    ):
+        self.authorized_email = config.shutter_authorized_email
+        self.count_to_shutdown = config.shutter_count_to_shutdown
+        self.connect_minecraft = connect_minecraft
+        self.firebase = firebase
+        self.compute_engine = compute_engine
+
+    def shutter_authorize(self, authorization: str) -> bool:
         id_token = authorization[len(_AUTH_SCHEME)+1:]
         result = verify_token(id_token, AuthRequest())
-        return result["email"] == authorized_email
+        return result["email"] == self.authorized_email
 
-    return shutter_authorize
-
-
-def build_shutdown(
-    connect_minecraft: Callable[[str], MinecraftProtocol],
-    get_instance: Callable[[], Instance],
-    stop_instance: Callable[[], bool],
-    count_consecutive_vacant: Callable[[], int],
-    reset_consecutive_vacant: Callable[[], None],
-    shutdown_count: int,
-) -> Callable[[], Awaitable[None]]:
-    async def shutdown():
-        instance = get_instance()
+    async def shutdown(self):
+        instance = self.compute_engine.get_instance()
 
         if not instance.is_running:
-            reset_consecutive_vacant()
+            self.firebase.reset_consecutive_vacant()
             return
 
-        connection = connect_minecraft(instance.address)
+        connection = self.connect_minecraft(instance.address)
         mc_status = MinecraftStatus(connection)
         await mc_status.read_status()
 
         if len(mc_status.players()) > 0:
-            reset_consecutive_vacant()
+            self.firebase.reset_consecutive_vacant()
             return
 
-        count = count_consecutive_vacant()
-        if count >= shutdown_count:
-            stop_instance()
-            reset_consecutive_vacant()
-
-    return shutdown
+        count = self.firebase.count_consecutive_vacant()
+        if count >= self.count_to_shutdown:
+            self.compute_engine.stop_instance()
+            self.firebase.reset_consecutive_vacant()

@@ -9,9 +9,12 @@ from fastapi.exceptions import HTTPException
 from firebase_admin.auth import InvalidIdTokenError, CertificateFetchError, ExpiredIdTokenError, RevokedIdTokenError, UserDisabledError
 from starlette.templating import Jinja2Templates
 from starlette.responses import HTMLResponse, JSONResponse
-from mclauncher.instance import Instance
 
+from mclauncher.compute_engine import ComputeEngine
+from mclauncher.config import Config
+from mclauncher.firebase import Firebase
 from mclauncher.minecraft import MinecraftProtocol
+from mclauncher.shutter import Shutter
 
 from .api.v1 import create_app as create_v1
 
@@ -62,31 +65,33 @@ def _authorize(app, verify_id_token: Callable, is_authorized_user: Callable[[str
 
 
 def create_app(
-        title: str,
-        firebase_config_json: str,
-        verify_id_token: Callable,
-        is_authorized_user: Callable[[str], bool],
-        connect_minecraft: Callable[[str], MinecraftProtocol],
-        get_instance: Callable[[], Instance],
-        start_instance: Callable[[], None],
-        shutter_authorize: Callable[[str], bool],
-        shutdown: Callable[[], None],
+    config: Config,
+    connect_minecraft: Callable[[str], MinecraftProtocol],
+    firebase_class: type[Firebase] = Firebase,
+    compute_engine_class: type[ComputeEngine] = ComputeEngine,
 ):
     app = FastAPI()
     templates = Jinja2Templates(
         directory=path.join(path.dirname(__file__), 'templates'),
     )
+    firebase = firebase_class(config)
+    compute_engine = compute_engine_class(config)
+    shutter = Shutter(
+        config=config,
+        connect_minecraft=connect_minecraft,
+        firebase=firebase,
+        compute_engine=compute_engine,
+    )
 
     v1 = create_v1(
         connect_minecraft=connect_minecraft,
-        get_instance=get_instance,
-        start_instance=start_instance,
+        compute_engine=compute_engine,
     )
 
     _authorize(
         app=v1,
-        verify_id_token=verify_id_token,
-        is_authorized_user=is_authorized_user
+        verify_id_token=firebase.verify_id_token,
+        is_authorized_user=firebase.is_authorized_user
     )
     app.mount("/api/v1", v1)
 
@@ -99,8 +104,8 @@ def create_app(
             "index.html",
             context={
                 "request": request,
-                "title": title,
-                "firebase_config_json": firebase_config_json
+                "title": config.title,
+                "firebase_config_json": config.firebase_config_json
             }
         )
 
@@ -113,7 +118,7 @@ def create_app(
             )
 
         try:
-            ok = shutter_authorize(authorization)
+            ok = shutter.shutter_authorize(authorization)
         except Exception as error:
             logger.error('shutter_authorize() in /shutter: %r', error)
             raise HTTPException(
@@ -128,7 +133,7 @@ def create_app(
             )
 
         try:
-            await shutdown()
+            await shutter.shutdown()
         except Exception as error:
             logger.error('shutdown() in /shutter: %r', error)
             raise HTTPException(

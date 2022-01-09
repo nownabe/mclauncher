@@ -26,12 +26,12 @@ Environment variables:
 * `PORT` (required)
 * `INSTANCE_ZONE` (required)
 * `INSTANCE_NAME` (required)
-* `SHUTTER_EMAIL` (required) - email of service account which calls `/shutter`.
+* `SHUTTER_AUTHORIZED_EMAIL` (required) - email of service account which calls `/shutter`.
 * `FIREBASE_CREDENTIALS_JSON` (required) - used for Firebase Authentication and Firestore.
 * `FIREBASE_CONFIG_JSON` (required)
 * `TITLE` (optional) - default is `mclauncher`.
 * `WEB_CONCURRENCY` (optional) - default is `4`.
-* `SHUTTER_COUNT` (optional) - If the count of consecutive vacant of the server counted by `/shutter` exceeds this count, `/shutter` shuts down the instance.
+* `SHUTTER_COUNT_TO_SHUTDOWN` (optional) - If the count of consecutive vacant of the server counted by `/shutter` exceeds this count, `/shutter` shuts down the instance.
 
 ## Development on Codespaces
 
@@ -50,15 +50,13 @@ firebase emulators:start
 Set environment variables.
 
 ```bash
-export FIREBASE_CREDENTIALS_JSON="$(cat firebase.credentials.json)"
 export FIREBASE_CONFIG_JSON='{"apiKey":"...", ...}'
+export FIREBASE_CREDENTIALS_JSON="$(cat firebase.credentials.json)"
 export FIRESTORE_EMULATOR_HOST="localhost:8080"
 export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/gcpproject.credentials.json"
 export INSTANCE_ZONE="asia-northeast1-a"
 export INSTANCE_NAME="minecraft-instance"
-export TITLE="mclauncher"
-export SHUTTER_EMAIL="mclauncher@example.com"
-export SHUTTER_COUNT="2"
+export SHUTTER_AUTHORIZED_EMAIL="mclauncher@example.com"
 ```
 
 If you haven't added your email as an authorized user, run `tools/add_authorized_users.py`.

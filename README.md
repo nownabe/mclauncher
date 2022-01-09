@@ -7,7 +7,7 @@
 You can quickly start with pre-built docker image.
 
 ```bash
-docker pull ghcr.io/nownabe-dev/mclauncher:latest
+docker pull ghcr.io/nownabe/mclauncher:latest
 ```
 
 ### Run on Google Cloud

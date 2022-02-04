@@ -16,7 +16,7 @@ google-api-python-client = "^2.33.0"
 google-cloud-firestore = "^2.3.4"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.5"
+pytest = "^7.0.0"
 requests = "^2.26.0"
 pytest-cov = "^3.0.0"
 anyio = "^3.4.0"

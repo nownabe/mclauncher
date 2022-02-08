@@ -4,6 +4,8 @@
     "config:base",
     ":prHourlyLimitNone",
   ],
+  assignAutomerge: false,
+  assigneesFromCodeOwners: true,
   dependencyDashboard: true,
   labels: ["renovate"],
   packageRules: [

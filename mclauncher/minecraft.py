@@ -34,13 +34,13 @@ class MinecraftProtocol(metaclass=ABCMeta):
         return (await self.read(1))[0]
 
     def write_byte(self, data: int):
-        """Write a byte"""
+        '''Write a byte'''
         # Write 7 bits as unsigned char in network (big) endian
-        self.write(struct.pack(">B", data))
+        self.write(struct.pack('>B', data))
 
     def write_ushort(self, data: int):
-        """Write an unsigned short (2 bytes)."""
-        self.write(struct.pack(">H", data))
+        '''Write an unsigned short (2 bytes).'''
+        self.write(struct.pack('>H', data))
 
     async def read_varint(self) -> int:
         '''Read a var int.'''
@@ -53,7 +53,7 @@ class MinecraftProtocol(metaclass=ABCMeta):
         raise TooLongVarInt()
 
     def write_varint(self, data: int):
-        """Write a var int"""
+        '''Write a var int'''
         data = uint32(data).value
         for _ in range(5):
             if data & ~0x7f == 0:
@@ -66,12 +66,12 @@ class MinecraftProtocol(metaclass=ABCMeta):
     async def read_string(self) -> str:
         '''Read a string.'''
         length = await self.read_varint()
-        return (await self.read(length)).decode("utf8")
+        return (await self.read(length)).decode('utf8')
 
     def write_string(self, data: str):
-        """Write a string"""
+        '''Write a string'''
         self.write_varint(len(data))
-        self.write(data.encode("utf8"))
+        self.write(data.encode('utf8'))
 
 
 class MinecraftProtocolBuffer(MinecraftProtocol):
@@ -88,11 +88,11 @@ class MinecraftProtocolBuffer(MinecraftProtocol):
         return data
 
     def write(self, data: bytes):
-        """Write bytes"""
+        '''Write bytes'''
         self.__write_buffer.extend(data)
 
     def flush(self) -> bytes:
-        """Return buffered data and its flush buffer."""
+        '''Return buffered data and its flush buffer.'''
         data = bytes(self.__write_buffer)
         self.__write_buffer = bytearray()
         return data
@@ -114,7 +114,7 @@ class MinecraftConnection(MinecraftProtocol):
     __writer: StreamWriter
 
     def __init__(self, address, timeout=3):
-        self.__host, *port = address.split(":")
+        self.__host, *port = address.split(':')
 
         if len(port) == 0:
             self.__port = 25565
@@ -194,7 +194,7 @@ class MinecraftStatus:
         result = MinecraftProtocolBuffer(raw_content)
 
         if await result.read_varint() != self.PACKET_ID_STATUS:
-            raise IOError("invalid response")
+            raise IOError('invalid response')
 
         self.__status = json.loads(await result.read_string())
 

@@ -20,7 +20,7 @@ pytest = "^7.0.0"
 requests = "^2.26.0"
 pytest-cov = "^3.0.0"
 anyio = "^3.4.0"
-trio = "^0.21.0"
+trio = "^0.22.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

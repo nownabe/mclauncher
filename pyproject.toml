@@ -10,7 +10,7 @@ python = "^3.10"
 fastapi = "^0.86.0"
 uvicorn = {extras = ["standard"], version = "^0.22.0"}
 Jinja2 = "^3.0.3"
-pydantic = "^1.8.2"
+pydantic = "^2.0.0"
 firebase-admin = "^5.2.0"
 google-api-python-client = "^2.33.0"
 google-cloud-firestore = "^2.3.4"

@@ -16,7 +16,7 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.CR_PAT }}
     - name: Remove v from tag name
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       id: set-revision
       with:
         result-encoding: string

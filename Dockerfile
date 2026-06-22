@@ -1,6 +1,6 @@
 # ---- build ---- #
 
-FROM python:3.10-slim-bullseye
+FROM python:3.13-slim-bullseye
 
 ENV POETRY_NO_INTERACTION=1
 ENV WEB_CONCURRENCY=4

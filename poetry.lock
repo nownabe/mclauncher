@@ -2,25 +2,23 @@
 
 [[package]]
 name = "anyio"
-version = "3.7.1"
-description = "High level compatibility layer for multiple asynchronous event loop implementations"
+version = "4.14.1"
+description = "High-level concurrency and networking framework on top of asyncio or Trio"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.10"
 files = [
-    {file = "anyio-3.7.1-py3-none-any.whl", hash = "sha256:91dee416e570e92c64041bd18b900d1d6fa78dff7048769ce5ac5ddad004fbb5"},
-    {file = "anyio-3.7.1.tar.gz", hash = "sha256:44a3c9aba0f5defa43261a8b3efb97891f2bd7d804e0e1f56419befa1adfc780"},
+    {file = "anyio-4.14.1-py3-none-any.whl", hash = "sha256:4e5533c5b8ff0a24f5d7a176cbe6877129cd183893f66b537f8f227d10527d72"},
+    {file = "anyio-4.14.1.tar.gz", hash = "sha256:8d648a3544c1a700e3ff78615cd679e4c5c3f149904287e73687b2596963629e"},
 ]
 
 [package.dependencies]
-exceptiongroup = {version = "*", markers = "python_version < \"3.11\""}
+exceptiongroup = {version = ">=1.0.2", markers = "python_version < \"3.11\""}
 idna = ">=2.8"
-sniffio = ">=1.1"
+typing_extensions = {version = ">=4.5", markers = "python_version < \"3.13\""}
 
 [package.extras]
-doc = ["Sphinx", "packaging", "sphinx-autodoc-typehints (>=1.2.0)", "sphinx-rtd-theme (>=1.2.2)", "sphinxcontrib-jquery"]
-test = ["anyio[trio]", "coverage[toml] (>=4.5)", "hypothesis (>=4.0)", "mock (>=4)", "psutil (>=5.9)", "pytest (>=7.0)", "pytest-mock (>=3.6.1)", "trustme", "uvloop (>=0.17)"]
-trio = ["trio (<0.22)"]
+trio = ["trio (>=0.32.0)"]
 
 [[package]]
 name = "attrs"
@@ -285,15 +283,18 @@ idna = ">=2.0.0"
 
 [[package]]
 name = "exceptiongroup"
-version = "1.0.0rc9"
+version = "1.3.1"
 description = "Backport of PEP 654 (exception groups)"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "exceptiongroup-1.0.0rc9-py3-none-any.whl", hash = "sha256:2e3c3fc1538a094aab74fad52d6c33fc94de3dfee3ee01f187c0e0c72aec5337"},
-    {file = "exceptiongroup-1.0.0rc9.tar.gz", hash = "sha256:9086a4a21ef9b31c72181c77c040a074ba0889ee56a7b289ff0afb0d97655f96"},
+    {file = "exceptiongroup-1.3.1-py3-none-any.whl", hash = "sha256:a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598"},
+    {file = "exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219"},
 ]
+
+[package.dependencies]
+typing-extensions = {version = ">=4.6.0", markers = "python_version < \"3.13\""}
 
 [package.extras]
 test = ["pytest (>=6)"]
@@ -714,25 +715,22 @@ files = [
 
 [[package]]
 name = "httpcore"
-version = "0.15.0"
+version = "0.13.3"
 description = "A minimal low-level HTTP client."
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.6"
 files = [
-    {file = "httpcore-0.15.0-py3-none-any.whl", hash = "sha256:1105b8b73c025f23ff7c36468e4432226cbb959176eab66864b8e31c4ee27fa6"},
-    {file = "httpcore-0.15.0.tar.gz", hash = "sha256:18b68ab86a3ccf3e7dc0f43598eaddcf472b602aba29f9aa6ab85fe2ada3980b"},
+    {file = "httpcore-0.13.3-py3-none-any.whl", hash = "sha256:ff614f0ef875b9e5fe0bdd459b31ea0eea282ff12dc82add83d68b3811ee94ad"},
+    {file = "httpcore-0.13.3.tar.gz", hash = "sha256:5d674b57a11275904d4fd0819ca02f960c538e4472533620f322fc7db1ea0edc"},
 ]
 
 [package.dependencies]
-anyio = ">=3.0.0,<4.0.0"
-certifi = "*"
 h11 = ">=0.11,<0.13"
 sniffio = ">=1.0.0,<2.0.0"
 
 [package.extras]
 http2 = ["h2 (>=3,<5)"]
-socks = ["socksio (>=1.0.0,<2.0.0)"]
 
 [[package]]
 name = "httplib2"
@@ -1968,4 +1966,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "f75bd0f966a48c271b60a37cca8cbec2db568186ff20a31de90d440da4144652"
+content-hash = "7fcf884acc4dd1972ced7963d365ac8db068bfb14c930f5b3e14f59de0606920"
